@@ -1,5 +1,5 @@
 ---
-name: wappa-schema:web
+name: wappa-skills:web
 description: Next.js + gluestack-ui v4 setup for Wappa Schema web projects. Covers project structure, GluestackUIProvider, routing, data fetching, and the full component registry.
 ---
 

@@ -25,7 +25,7 @@ npx skills add appaflytech/skills -a cursor
 
 ## Available Skills
 
-### `wappa-schema`
+### `wappa-skills`
 
 Complete guide for building **Next.js** (web) or **Expo React Native** (mobile) projects with Wappa CMS.
 
@@ -43,11 +43,11 @@ All components use **gluestack-ui v4** for styling on both platforms.
 
 | Sub-Skill                 | File                             | Coverage                                                           |
 | ------------------------- | -------------------------------- | ------------------------------------------------------------------ |
-| `wappa-schema`            | [SKILL.md](./SKILL.md)           | Main overview, mandatory rules, component table                    |
-| `wappa-schema:components` | [components.md](./components.md) | Props interfaces + gluestack implementations for all 27 components |
-| `wappa-schema:web`        | [web.md](./web.md)               | Next.js setup, GluestackUIProvider, routing, component registry    |
-| `wappa-schema:mobile`     | [mobile.md](./mobile.md)         | Expo setup, WapScreen, contextService, Zustand store, registry     |
-| `wappa-schema:theme`      | [theme.md](./theme.md)           | Wappa theme system + gluestack-ui v4 theming for web and mobile    |
+| `wappa-skills`            | [SKILL.md](./SKILL.md)           | Main overview, mandatory rules, component table                    |
+| `wappa-skills:components` | [components.md](./components.md) | Props interfaces + gluestack implementations for all 27 components |
+| `wappa-skills:web`        | [web.md](./web.md)               | Next.js setup, GluestackUIProvider, routing, component registry    |
+| `wappa-skills:mobile`     | [mobile.md](./mobile.md)         | Expo setup, WapScreen, contextService, Zustand store, registry     |
+| `wappa-skills:theme`      | [theme.md](./theme.md)           | Wappa theme system + gluestack-ui v4 theming for web and mobile    |
 
 ## Usage
 
@@ -65,8 +65,8 @@ Set up the PageComponent render system for mobile
 **Load a specific sub-skill** (tell your agent):
 
 ```
-Load wappa-schema:components and implement the Card component
-Load wappa-schema:mobile and set up the WapScreen for Expo
+Load wappa-skills:components and implement the Card component
+Load wappa-skills:mobile and set up the WapScreen for Expo
 ```
 
 ## Prerequisites

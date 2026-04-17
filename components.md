@@ -1,5 +1,5 @@
 ---
-name: wappa-schema:components
+name: wappa-skills:components
 description: Complete component reference for Wappa Schema projects. Props derived from admin schema (elements.ts/constants.ts). All implementations use gluestack-ui v4 for both web and mobile.
 ---
 

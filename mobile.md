@@ -1,5 +1,5 @@
 ---
-name: wappa-schema:mobile
+name: wappa-skills:mobile
 description: Expo React Native + gluestack-ui v4 setup for Wappa Schema mobile projects. Covers project structure, GluestackUIProvider, ThemeProvider, WapScreen, contextService, and the full component registry.
 ---
 

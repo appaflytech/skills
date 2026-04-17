@@ -1,5 +1,5 @@
 ---
-name: wappa-schema:theme
+name: wappa-skills:theme
 description: Wappa CMS theme system integrated with gluestack-ui v4. Web uses CSS variables auto-injected by admin. Mobile uses ThemeProvider to map wappa mobileNeutrals to gluestack config.
 ---
 

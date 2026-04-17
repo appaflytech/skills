@@ -1,5 +1,5 @@
 ---
-name: wappa-schema
+name: wappa-skills
 description: Complete guide for building Next.js (web) or Expo React Native (mobile) projects with Wappa CMS. All components use gluestack-ui v4 for styling on both platforms. Covers @appaflytech/wappa-client SDK, PageComponent render system, component registry, AppContext, and theme system.
 ---
 
@@ -65,10 +65,10 @@ Whenever the user says "create a wappa project" or "build an app with wappa", **
 
 | Sub-Skill                 | File                             | When to Use                                                            |
 | ------------------------- | -------------------------------- | ---------------------------------------------------------------------- |
-| `wappa-schema:components` | [components.md](./components.md) | Full props reference + gluestack implementations for all 27 components |
-| `wappa-schema:web`        | [web.md](./web.md)               | Next.js project setup, routing, GluestackUIProvider for web            |
-| `wappa-schema:mobile`     | [mobile.md](./mobile.md)         | Expo project setup, ThemeProvider, WapScreen, contextService           |
-| `wappa-schema:theme`      | [theme.md](./theme.md)           | Wappa theme system + gluestack-ui v4 theming (web + mobile)            |
+| `wappa-skills:components` | [components.md](./components.md) | Full props reference + gluestack implementations for all 27 components |
+| `wappa-skills:web`        | [web.md](./web.md)               | Next.js project setup, routing, GluestackUIProvider for web            |
+| `wappa-skills:mobile`     | [mobile.md](./mobile.md)         | Expo project setup, ThemeProvider, WapScreen, contextService           |
+| `wappa-skills:theme`      | [theme.md](./theme.md)           | Wappa theme system + gluestack-ui v4 theming (web + mobile)            |
 
 ### 6. Setup Steps (Apply in Order)
 
@@ -518,7 +518,7 @@ export default function getComponent(
 
 ## 8. Available Core Components
 
-> For full props + gluestack implementation code, see **[wappa-schema:components](./components.md)**.
+> For full props + gluestack implementation code, see **[wappa-skills:components](./components.md)**.
 
 ### Layout Components
 
@@ -583,7 +583,7 @@ export default function getComponent(
 
 ## 9. Creating a New Component
 
-> All new components must use gluestack-ui v4. See **[wappa-schema:components](./components.md)** for full examples.
+> All new components must use gluestack-ui v4. See **[wappa-skills:components](./components.md)** for full examples.
 
 ### Web Component — `components/wap/my-component/index.tsx`
 
