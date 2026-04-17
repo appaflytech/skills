@@ -1,9 +1,11 @@
 ---
 name: wappa-skills:web
-description: Next.js + gluestack-ui v4 setup for Wappa Schema web projects. Covers project structure, GluestackUIProvider, routing, data fetching, and the full component registry.
+description: Next.js setup for Wappa Schema web projects. Framework-agnostic — use any UI library. gluestack-ui v4 is the default. Covers project structure, GluestackUIProvider (optional), routing, data fetching, and the full component registry.
 ---
 
-# Wappa Schema — Web (Next.js + gluestack-ui v4)
+# Wappa Schema — Web (Next.js)
+
+> **UI Framework:** This guide shows gluestack-ui v4 as the default. You can swap it for shadcn/ui, Tailwind CSS, or any other library. See `wappa-skills:components` for framework-agnostic component contracts.
 
 ---
 
@@ -19,10 +21,14 @@ cd my-wappa-web
 # Install Wappa SDK
 npm install @appaflytech/wappa-client
 
-# Install gluestack-ui v4
+# Install gluestack-ui v4 (default — skip if using a different UI framework)
 npx gluestack-ui@latest init -y
 npx gluestack-ui@latest add --all -y
 ```
+
+> **Using a different UI framework?** Skip the gluestack-ui steps above.
+> Install your preferred library (shadcn/ui, Tailwind CSS, etc.) and implement
+> components using the contracts defined in `wappa-skills:components`.
 
 ### `.env.local`
 

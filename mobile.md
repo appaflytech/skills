@@ -1,9 +1,11 @@
 ---
 name: wappa-skills:mobile
-description: Expo React Native + gluestack-ui v4 setup for Wappa Schema mobile projects. Covers project structure, GluestackUIProvider, ThemeProvider, WapScreen, contextService, and the full component registry.
+description: Expo React Native setup for Wappa Schema mobile projects. Framework-agnostic — use any UI library. gluestack-ui v4 is the default. Covers project structure, GluestackUIProvider (optional), WapScreen, contextService, and the full component registry.
 ---
 
-# Wappa Schema — Mobile (Expo + gluestack-ui v4)
+# Wappa Schema — Mobile (Expo React Native)
+
+> **UI Framework:** This guide shows gluestack-ui v4 as the default. You can swap it for NativeWind only, React Native Paper, or any other library. See `wappa-skills:components` for framework-agnostic component contracts.
 
 ---
 
@@ -22,13 +24,19 @@ npm install @appaflytech/wappa-client
 # Install Zustand
 npm install zustand @react-native-async-storage/async-storage
 
-# Install gluestack-ui v4
+# Install gluestack-ui v4 (default — skip if using a different UI framework)
 npx gluestack-ui@latest init -y
 npx gluestack-ui@latest add --all -y
 
 # Install NativeWind (if not included by gluestack init)
 npm install nativewind tailwindcss
 ```
+
+> **Using a different UI framework?** Skip the gluestack-ui steps above.
+> Install your preferred library (NativeWind only, React Native Paper, etc.) and implement
+> components using the contracts defined in `wappa-skills:components`.
+
+````
 
 ### `.env`
 
@@ -37,7 +45,7 @@ EXPO_PUBLIC_WAP_API=https://api.your-service.com
 EXPO_PUBLIC_WAP_CDN=https://cdn.your-service.com
 EXPO_PUBLIC_WAP_SITE_KEY=your-site-key
 EXPO_PUBLIC_ENV=development
-```
+````
 
 ---
 

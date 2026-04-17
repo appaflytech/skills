@@ -1,1439 +1,1338 @@
----
-name: wappa-skills:components
-description: Complete component reference for Wappa Schema projects. Props derived from admin schema (elements.ts/constants.ts). All implementations use gluestack-ui v4 for both web and mobile.
----
+# Wappa Component Schema Contracts
 
-# Wappa Components — gluestack-ui v4 Reference
-
-All components receive props via `{...refs, ...mappedValue, ...props}` spread from the Wappa render system.
-
-> **Mobile rule:** Always use `safeText(value)` for string props — the render system may pass unresolved ref objects.
+> **Load this file when implementing any component.**
+> Props contracts are derived from the Wappa admin schema (`elements.ts` + `constants.ts`).
+> The contract defines what props the admin can configure. Your implementation must accept all of them.
+> Framework is your choice — examples use gluestack-ui v4 (default).
 
 ---
 
-## Layout Components
+## Shared Types
 
-### `container` — Page Width Wrapper
+```ts
+// Image prop — resolved by refs (do not construct manually)
+type ImageProps = {
+  src: string
+  alt?: string
+  width?: number
+  height?: number
+}
 
-**Admin Props (from `CONTAINER_PROPS`):**
+// Link prop — resolved by refs
+type LinkProps = {
+  href: string
+  target?: '_blank' | '_self'
+  rel?: string
+}
+
+// Column breakpoint config (used by row/column)
+type BreakpointConfig = {
+  direction?: 'row' | 'column' | 'row-reverse' | 'column-reverse'
+  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline'
+  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly'
+  wrap?: 'wrap' | 'nowrap' | 'wrap-reverse'
+  gutter?: string
+}
+
+type ColumnBreakpoint = {
+  size?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
+  align?: 'start' | 'center' | 'end'
+  offset?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
+  order?: 'first' | 'last'
+}
+
+type SpaceToken = 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl'
+type SizeToken  = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+```
+
+---
+
+## GROUP: layout
+
+### `container` — isMobile: false (web only)
 
 ```ts
 interface ContainerProps {
-  size?: "fluid" | "extended" | "wide" | "medium" | "narrow";
-  className?: string;
-  children?: React.ReactNode;
+  size?: 'fluid' | 'extended' | 'wide' | 'medium' | 'narrow'
+  className?: string
+  children?: React.ReactNode
 }
 ```
 
-**Web — `components/wap/container/index.tsx`:**
-
+**gluestack-ui v4 default:**
 ```tsx
-import { Box } from "@/components/ui/box";
-
-const SIZE_CLASSES: Record<string, string> = {
-  fluid: "w-full",
-  extended: "max-w-[1400px] mx-auto px-4",
-  wide: "max-w-[1200px] mx-auto px-4",
-  medium: "max-w-[900px] mx-auto px-4",
-  narrow: "max-w-[640px] mx-auto px-4",
-};
-
-export default function Container({
-  size = "wide",
-  className,
-  children,
-}: ContainerProps) {
-  return (
-    <Box
-      className={`${SIZE_CLASSES[size] || SIZE_CLASSES.wide} ${className || ""}`}
-    >
-      {children}
-    </Box>
-  );
-}
-```
-
-**Mobile — `components/wap/container/Container.tsx`:**
-
-```tsx
-import { Box } from "@/components/ui/box";
-
-export default function Container({ className, children }: ContainerProps) {
-  return (
-    <Box className={`flex-1 w-full px-4 ${className || ""}`}>{children}</Box>
-  );
+export default function Container({ size = 'wide', className, children }: ContainerProps) {
+  const sizeMap = { fluid: 'w-full', extended: 'max-w-screen-2xl', wide: 'max-w-screen-xl', medium: 'max-w-screen-lg', narrow: 'max-w-screen-md' }
+  return <div className={`mx-auto px-4 ${sizeMap[size]} ${className ?? ''}`}>{children}</div>
 }
 ```
 
 ---
 
-### `row` — Flex Row (Responsive)
+### `array-repeater` — isMobile: true
 
-**Admin Props:**
+Built-in SDK component — import and use directly in registry:
 
 ```ts
-interface BreakpointConfig {
-  direction?: "row" | "row-reverse" | "column" | "column-reverse";
-  align?: "start" | "center" | "end" | "baseline" | "stretch";
-  justify?: "start" | "center" | "end" | "around" | "between" | "evenly";
-  wrap?: "nowrap" | "wrap" | "wrap-reverse";
-  gutter?: "none" | "xs" | "sm" | "md" | "lg" | "xl";
+import { ArrayRepeater } from "@appaflytech/wappa-client/core/components"
+// "array-repeater": ArrayRepeater
+```
+
+---
+
+### `box` — isMobile: true
+
+```ts
+interface BoxProps {
+  className?: string
+  children?: React.ReactNode
 }
+```
+
+gluestack-ui v4: `import { Box } from "@/components/ui/box"`
+
+---
+
+### `center` — isMobile: true
+
+```ts
+interface CenterProps {
+  className?: string
+  children?: React.ReactNode
+}
+```
+
+gluestack-ui v4: `import { Center } from "@/components/ui/center"`
+
+---
+
+### `hstack` — isMobile: true
+
+```ts
+interface HStackProps {
+  space?: SpaceToken
+  reversed?: boolean
+  className?: string
+  children?: React.ReactNode
+}
+```
+
+gluestack-ui v4: `import { HStack } from "@/components/ui/hstack"` — pass `space`, `reversed` directly.
+
+---
+
+### `vstack` — isMobile: true
+
+```ts
+interface VStackProps {
+  space?: SpaceToken
+  reversed?: boolean
+  className?: string
+  children?: React.ReactNode
+}
+```
+
+gluestack-ui v4: `import { VStack } from "@/components/ui/vstack"` — pass `space`, `reversed` directly.
+
+---
+
+### `grid` — isMobile: true
+
+```ts
+interface GridProps {
+  numColumns?: number
+  gap?: '0' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  className?: string
+  children?: React.ReactNode
+}
+```
+
+gluestack-ui v4: `import { Grid } from "@/components/ui/grid"` — pass `numColumns`, `gap` directly.
+
+---
+
+### `pressable` — isMobile: true
+
+```ts
+interface PressableProps {
+  className?: string
+  children?: React.ReactNode
+  onPress?: () => void
+}
+```
+
+gluestack-ui v4: `import { Pressable } from "@/components/ui/pressable"` — pass `onPress` directly.
+
+---
+
+### `row` — isMobile: false (web grid row)
+
+```ts
 interface RowProps {
-  xs?: BreakpointConfig;
-  sm?: BreakpointConfig;
-  md?: BreakpointConfig;
-  lg?: BreakpointConfig;
-  xl?: BreakpointConfig;
-  className?: string;
-  children?: React.ReactNode;
+  xs?: BreakpointConfig
+  sm?: BreakpointConfig
+  md?: BreakpointConfig
+  lg?: BreakpointConfig
+  xl?: BreakpointConfig
+  className?: string
+  children?: React.ReactNode
 }
 ```
 
-**Web — `components/wap/row/index.tsx`:**
-
-```tsx
-import { Box } from "@/components/ui/box";
-
-const JUSTIFY: Record<string, string> = {
-  start: "justify-start",
-  center: "justify-center",
-  end: "justify-end",
-  around: "justify-around",
-  between: "justify-between",
-  evenly: "justify-evenly",
-};
-const ALIGN: Record<string, string> = {
-  start: "items-start",
-  center: "items-center",
-  end: "items-end",
-  baseline: "items-baseline",
-  stretch: "items-stretch",
-};
-const GUTTER: Record<string, string> = {
-  none: "gap-0",
-  xs: "gap-1",
-  sm: "gap-2",
-  md: "gap-4",
-  lg: "gap-6",
-  xl: "gap-8",
-};
-const DIR: Record<string, string> = {
-  row: "flex-row",
-  "row-reverse": "flex-row-reverse",
-  column: "flex-col",
-  "column-reverse": "flex-col-reverse",
-};
-
-function bpClasses(bp?: BreakpointConfig, prefix = "") {
-  if (!bp) return "";
-  const p = prefix ? `${prefix}:` : "";
-  return [
-    bp.direction && `${p}${DIR[bp.direction]}`,
-    bp.align && `${p}${ALIGN[bp.align]}`,
-    bp.justify && `${p}${JUSTIFY[bp.justify]}`,
-    bp.gutter && `${p}${GUTTER[bp.gutter]}`,
-    bp.wrap === "wrap"
-      ? `${p}flex-wrap`
-      : bp.wrap === "nowrap"
-        ? `${p}flex-nowrap`
-        : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-}
-
-export default function Row({
-  xs,
-  sm,
-  md,
-  lg,
-  xl,
-  className,
-  children,
-}: RowProps) {
-  return (
-    <Box
-      className={`flex ${bpClasses(xs)} ${bpClasses(sm, "sm")} ${bpClasses(md, "md")} ${bpClasses(lg, "lg")} ${bpClasses(xl, "xl")} ${className || ""}`}
-    >
-      {children}
-    </Box>
-  );
-}
-```
-
-**Mobile — `components/wap/row/Row.tsx`:**
-
-```tsx
-import { HStack } from "@/components/ui/hstack";
-import { VStack } from "@/components/ui/vstack";
-
-const SPACE: Record<string, string> = {
-  none: "gap-0",
-  xs: "gap-1",
-  sm: "gap-2",
-  md: "gap-4",
-  lg: "gap-6",
-  xl: "gap-8",
-};
-
-export default function Row({ xs, className, children }: RowProps) {
-  const dir = xs?.direction;
-  const gapClass = xs?.gutter ? SPACE[xs.gutter] : "";
-  const isVertical = dir === "column" || dir === "column-reverse";
-  if (isVertical)
-    return (
-      <VStack className={`${gapClass} ${className || ""}`}>{children}</VStack>
-    );
-  return (
-    <HStack className={`${gapClass} flex-wrap ${className || ""}`}>
-      {children}
-    </HStack>
-  );
-}
-```
+Map breakpoint configs to CSS flex classes. Typically wraps columns.
 
 ---
 
-### `column` — Grid Column
-
-**Admin Props:**
+### `column` — isMobile: false (web grid column)
 
 ```ts
-interface ColumnBreakpoint {
-  size?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
-  align?: "start" | "center" | "end";
-  offset?: number;
-  order?: "first" | "last";
-}
 interface ColumnProps {
-  xs?: ColumnBreakpoint;
-  sm?: ColumnBreakpoint;
-  md?: ColumnBreakpoint;
-  lg?: ColumnBreakpoint;
-  xl?: ColumnBreakpoint;
-  className?: string;
-  children?: React.ReactNode;
+  xs?: ColumnBreakpoint
+  sm?: ColumnBreakpoint
+  md?: ColumnBreakpoint
+  lg?: ColumnBreakpoint
+  xl?: ColumnBreakpoint
+  className?: string
+  children?: React.ReactNode
 }
 ```
 
-**Web — `components/wap/column/index.tsx`:**
-
-```tsx
-import { Box } from "@/components/ui/box";
-
-function colClass(bp?: ColumnBreakpoint, prefix = "") {
-  if (!bp) return "";
-  const p = prefix ? `${prefix}:` : "";
-  const ALIGN: Record<string, string> = {
-    start: "self-start",
-    center: "self-center",
-    end: "self-end",
-  };
-  return [
-    bp.size && `${p}w-${bp.size}/12`,
-    bp.align && `${p}${ALIGN[bp.align]}`,
-    bp.offset && `${p}ml-${bp.offset}/12`,
-    bp.order === "first"
-      ? `${p}order-first`
-      : bp.order === "last"
-        ? `${p}order-last`
-        : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-}
-
-export default function Column({
-  xs,
-  sm,
-  md,
-  lg,
-  xl,
-  className,
-  children,
-}: ColumnProps) {
-  return (
-    <Box
-      className={`${colClass(xs)} ${colClass(sm, "sm")} ${colClass(md, "md")} ${colClass(lg, "lg")} ${colClass(xl, "xl")} ${className || ""}`}
-    >
-      {children}
-    </Box>
-  );
-}
-```
-
-**Mobile — `components/wap/column/Column.tsx`:**
-
-```tsx
-import { Box } from "@/components/ui/box";
-
-export default function Column({ xs, className, children }: ColumnProps) {
-  const flexValue = (xs?.size ?? 12) / 12;
-  return (
-    <Box className={className || ""} style={{ flex: flexValue }}>
-      {children}
-    </Box>
-  );
-}
-```
+Use `col-{size}`, `offset-{offset}`, breakpoint prefixes for responsive layout.
 
 ---
 
-### `section` — Section Wrapper
-
-**Admin Props:**
+### `section` — isMobile: false
 
 ```ts
 interface SectionProps {
-  title?: string;
-  description?: string;
-  anchor?: { href?: string; target?: string; title?: string };
-  container?: { size?: string };
-  children?: React.ReactNode;
+  title?: string
+  description?: string
+  anchor?: LinkProps
+  container?: { size?: 'fluid' | 'extended' | 'wide' | 'medium' | 'narrow' }
+  className?: string
+  children?: React.ReactNode
 }
 ```
-
-**Web — `components/wap/section/index.tsx`:**
-
-```tsx
-import { Box } from "@/components/ui/box";
-import Container from "../container";
-
-export default function Section({ container, children }: SectionProps) {
-  return (
-    <Box as="section">
-      <Container size={container?.size as any}>{children}</Container>
-    </Box>
-  );
-}
-```
-
-**Mobile:** Simple wrapper — `<Box className="w-full">{children}</Box>`
 
 ---
 
-## Content Components
+### `view` — isMobile: true
 
-### `heading` — Heading
+> **Special component**: The render system uses its `id` to look up content in `page.views[id]`.
+> The render function handles `view` natively — **no component implementation needed**.
 
-**Admin Props:**
+---
+
+---
+
+## GROUP: typography
+
+### `heading` — isMobile: true
 
 ```ts
 interface HeadingProps {
-  children?: string;
-  nodeType?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
-  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
-  numberOfLines?: number;
-  className?: string;
+  children: string
+  nodeType?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl'
+  bold?: boolean
+  isTruncated?: boolean
+  numberOfLines?: number
+  className?: string
 }
 ```
 
-**Web & Mobile:**
-
+**gluestack-ui v4 default:**
 ```tsx
-import { Heading } from "@/components/ui/heading";
-import { safeText } from "../../utils/path"; // mobile only
-
-export default function WapHeading({
-  children,
-  nodeType = "h2",
-  size = "xl",
-  numberOfLines,
-  className,
-}: HeadingProps) {
+import { Heading } from "@/components/ui/heading"
+export default function WapHeading({ children, nodeType = 'h2', size = 'xl', bold, isTruncated, className }: HeadingProps) {
   return (
-    <Heading
-      as={nodeType}
-      size={size}
-      numberOfLines={numberOfLines}
-      className={className}
-    >
-      {safeText(children)} {/* use safeText on mobile */}
+    <Heading as={nodeType} size={size} bold={bold} isTruncated={isTruncated} className={className}>
+      {children}
     </Heading>
-  );
+  )
 }
 ```
 
 ---
 
-### `paragraph` — Paragraph Text
-
-**Admin Props:**
+### `paragraph` — isMobile: true
 
 ```ts
 interface ParagraphProps {
-  children?: string;
-  size?: "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
-  bold?: boolean;
-  italic?: boolean;
-  isTruncated?: boolean;
-  className?: string;
+  children: string
+  size?: '2xs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl'
+  bold?: boolean
+  italic?: boolean
+  isTruncated?: boolean
+  numberOfLines?: number
+  className?: string
 }
 ```
 
-**Web & Mobile:**
+**gluestack-ui v4 default:** Use `Text` component — `import { Text } from "@/components/ui/text"`
+
+---
+
+### `html` — isMobile: false (web only)
+
+```ts
+interface HtmlProps {
+  content: string   // Raw HTML string (rich text editor output)
+  className?: string
+}
+```
 
 ```tsx
-import { Text } from "@/components/ui/text";
-
-export default function Paragraph({
-  children,
-  size = "md",
-  bold,
-  italic,
-  isTruncated,
-  className,
-}: ParagraphProps) {
-  return (
-    <Text
-      size={size}
-      bold={bold}
-      italic={italic}
-      isTruncated={isTruncated}
-      className={className}
-    >
-      {safeText(children)} {/* use safeText on mobile */}
-    </Text>
-  );
+export default function WapHtml({ content, className }: HtmlProps) {
+  return <div className={`prose max-w-none ${className ?? ''}`} dangerouslySetInnerHTML={{ __html: content }} />
 }
 ```
 
 ---
 
-### `html` — Raw HTML Content
+### `icon` — isMobile: true
 
-**Admin Props:** `content?: string`
-
-**Web:**
-
-```tsx
-export default function Html({ content }: { content?: string }) {
-  if (!content) return null;
-  return <div dangerouslySetInnerHTML={{ __html: content }} />;
+```ts
+interface WapIconProps {
+  as: string           // Lucide icon name (e.g. "ArrowRight", "Star")
+  size?: '2xs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+  className?: string
 }
 ```
 
-**Mobile:** Use `react-native-render-html`:
-
+**gluestack-ui v4 default:**
 ```tsx
-import RenderHtml from "react-native-render-html";
-import { useWindowDimensions } from "react-native";
+import { Icon } from "@/components/ui/icon"
+import * as LucideIcons from "lucide-react-native"  // or lucide-react on web
 
-export default function Html({ content }: { content?: string }) {
-  const { width } = useWindowDimensions();
-  if (!content) return null;
-  return <RenderHtml contentWidth={width} source={{ html: content }} />;
+export default function WapIcon({ as: iconName, size = 'md', className }: WapIconProps) {
+  const LucideIcon = (LucideIcons as any)[iconName]
+  if (!LucideIcon) return null
+  return <Icon as={LucideIcon} size={size} className={className} />
 }
 ```
 
 ---
 
-### `image` — Image
+---
 
-**Admin Props:**
+## GROUP: media
+
+### `image` — isMobile: true
 
 ```ts
 interface WapImageProps {
-  source?: { src?: string; alt?: string };
-  alt?: string;
-  size?: "2xs" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "full" | "none";
-  resizeMode?: "cover" | "contain" | "stretch" | "center";
-  rounded?: number;
-  className?: string;
+  source: ImageProps      // resolved from refs (src, alt, width, height)
+  alt?: string
+  size?: '2xs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full' | 'none'
+  resizeMode?: 'cover' | 'contain' | 'stretch' | 'center'
+  rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | 'full'
+  className?: string
 }
 ```
 
-**Web:**
-
+**gluestack-ui v4 default:**
 ```tsx
-import { Image } from "@/components/ui/image";
+import { Image } from "@/components/ui/image"
+import { path } from "@appaflytech/wappa-client/core/utils"
 
-export default function WapImage({
-  source,
-  alt,
-  size = "full",
-  resizeMode = "cover",
-  rounded,
-  className,
-}: WapImageProps) {
-  if (!source?.src) return null;
+export default function WapImage({ source, alt, size = 'full', resizeMode = 'cover', rounded = 'none', className }: WapImageProps) {
+  if (!source?.src) return null
   return (
     <Image
-      source={{ uri: source.src }}
-      alt={alt || source.alt || ""}
-      size={size !== "none" ? size : undefined}
-      className={`object-${resizeMode} ${rounded ? `rounded-[${rounded}px]` : ""} ${className || ""}`}
-    />
-  );
-}
-```
-
-**Mobile:** Same but wrap `source.src` with `getCDNImage()`:
-
-```tsx
-import { getCDNImage } from "../../utils/path";
-const uri = source?.src ? getCDNImage(source.src) : undefined;
-```
-
----
-
-### `video` — Video Player
-
-**Admin Props:** `source?: { src?: string }`
-
-**Web:** `<video src={source?.src} controls className="w-full" />`
-
-**Mobile:** Use `expo-video` or `expo-av`:
-
-```tsx
-import { Video, ResizeMode } from "expo-av";
-// <Video source={{ uri: source?.src }} useNativeControls resizeMode={ResizeMode.CONTAIN} />
-```
-
----
-
-### `iframe` — Embedded Iframe (Web only)
-
-**Admin Props:** `children?: string` (URL)
-
-**Web:** `<iframe src={children} className="w-full h-64 border-0" />`
-
-**Mobile:** Not supported — render null or a `<Link>` to open in browser.
-
----
-
-## Interactive Components
-
-### `button` — Button
-
-**Admin Props (from `BUTTON_PROPS`):**
-
-```ts
-interface ButtonProps {
-  children?: string;
-  anchor?: { href?: string; target?: string; title?: string };
-  action?: "primary" | "secondary" | "positive" | "negative" | "default";
-  variant?: "solid" | "outline" | "link";
-  size?: "xs" | "sm" | "md" | "lg" | "xl";
-  className?: string;
-}
-```
-
-**Web:**
-
-```tsx
-"use client";
-import { Button, ButtonText } from "@/components/ui/button";
-import Link from "next/link";
-
-export default function WapButton({
-  children,
-  anchor,
-  action = "primary",
-  variant = "solid",
-  size = "md",
-  className,
-}: ButtonProps) {
-  const label = children || anchor?.title || "";
-  if (anchor?.href) {
-    return (
-      <Button
-        action={action}
-        variant={variant}
-        size={size}
-        className={className}
-        asChild
-      >
-        <Link href={anchor.href} target={anchor.target || "_self"}>
-          <ButtonText>{label}</ButtonText>
-        </Link>
-      </Button>
-    );
-  }
-  return (
-    <Button action={action} variant={variant} size={size} className={className}>
-      <ButtonText>{label}</ButtonText>
-    </Button>
-  );
-}
-```
-
-**Mobile:**
-
-```tsx
-import { Button, ButtonText } from "@/components/ui/button";
-import { Linking } from "react-native";
-
-export default function WapButton({
-  children,
-  anchor,
-  action = "primary",
-  variant = "solid",
-  size = "md",
-  className,
-}: ButtonProps) {
-  const label = safeText(children || anchor?.title);
-  return (
-    <Button
-      action={action}
-      variant={variant}
+      source={{ uri: path.cdn(source.src) }}
+      alt={alt || source.alt || ''}
       size={size}
-      className={className}
-      onPress={() => anchor?.href && Linking.openURL(anchor.href)}
-    >
-      <ButtonText>{label}</ButtonText>
-    </Button>
-  );
+      className={`object-${resizeMode} rounded-${rounded} ${className ?? ''}`}
+    />
+  )
 }
 ```
 
 ---
 
-### `link` — Link (droppable)
-
-**Admin Props:**
+### `video` — isMobile: true
 
 ```ts
-interface LinkProps {
-  source?: { href?: string; target?: string; title?: string };
-  className?: string;
-  children?: React.ReactNode;
+interface VideoProps {
+  source: { src: string }
+  autoPlay?: boolean
+  muted?: boolean
+  loop?: boolean
+  controls?: boolean
+  className?: string
 }
 ```
 
-**Web:**
-
-```tsx
-import { Link, LinkText } from "@/components/ui/link";
-
-export default function WapLink({ source, className, children }: LinkProps) {
-  if (!source?.href) return <>{children}</>;
-  return (
-    <Link
-      href={source.href}
-      isExternal={source.target === "_blank"}
-      className={className}
-    >
-      {children || <LinkText>{source.title}</LinkText>}
-    </Link>
-  );
-}
-```
-
-**Mobile:** Same pattern but use `Linking.openURL` in `onPress`.
+**Web:** use `<video>` element. **Mobile:** use `expo-av` Video component.
 
 ---
 
-## Display Components
+### `iframe` — isMobile: false (web only)
 
-### `card` — Card
+```ts
+interface IframeProps {
+  children: string    // URL to embed
+  title?: string
+  className?: string
+}
+```
 
-**Admin Props (from `CARD_PROPS`):**
+```tsx
+export default function WapIframe({ children: src, title = '', className }: IframeProps) {
+  return <iframe src={src} title={title} className={`w-full ${className ?? ''}`} allowFullScreen />
+}
+```
+
+---
+
+---
+
+## GROUP: interactive
+
+### `button` — isMobile: true
+
+```ts
+interface WapButtonProps {
+  children: string
+  anchor?: LinkProps
+  action?: 'primary' | 'secondary' | 'positive' | 'negative' | 'default'
+  variant?: 'solid' | 'outline' | 'link'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  isDisabled?: boolean
+  className?: string
+}
+```
+
+**gluestack-ui v4 default:**
+```tsx
+import { Button, ButtonText } from "@/components/ui/button"
+import Link from "next/link"
+
+export default function WapButton({ children, anchor, action = 'primary', variant = 'solid', size = 'md', isDisabled, className }: WapButtonProps) {
+  const btn = (
+    <Button action={action} variant={variant} size={size} isDisabled={isDisabled} className={className}>
+      <ButtonText>{children}</ButtonText>
+    </Button>
+  )
+  if (!anchor?.href) return btn
+  return <Link href={anchor.href} target={anchor.target}>{btn}</Link>
+}
+```
+
+---
+
+### `link` — isMobile: true
+
+```ts
+interface WapLinkProps {
+  source: LinkProps
+  isExternal?: boolean
+  className?: string
+  children?: React.ReactNode
+}
+```
+
+**gluestack-ui v4 default:**
+```tsx
+import { Link, LinkText } from "@/components/ui/link"
+export default function WapLink({ source, isExternal, className, children }: WapLinkProps) {
+  return (
+    <Link href={source?.href ?? '#'} isExternal={isExternal} className={className}>
+      <LinkText>{children}</LinkText>
+    </Link>
+  )
+}
+```
+
+---
+
+### `fab` — isMobile: true
+
+```ts
+interface FabProps {
+  label?: string
+  iconName?: string    // Lucide icon name
+  size?: 'sm' | 'md' | 'lg'
+  placement?: 'bottom left' | 'bottom right' | 'top left' | 'top right'
+  isDisabled?: boolean
+  className?: string
+}
+```
+
+**gluestack-ui v4 default:**
+```tsx
+import { Fab, FabLabel, FabIcon } from "@/components/ui/fab"
+import * as LucideIcons from "lucide-react-native"
+
+export default function WapFab({ label, iconName, size = 'md', placement = 'bottom right', isDisabled, className }: FabProps) {
+  const LucideIcon = iconName ? (LucideIcons as any)[iconName] : null
+  return (
+    <Fab size={size} placement={placement} isDisabled={isDisabled} className={className}>
+      {LucideIcon && <FabIcon as={LucideIcon} />}
+      {label && <FabLabel>{label}</FabLabel>}
+    </Fab>
+  )
+}
+```
+
+---
+
+---
+
+## GROUP: display
+
+### `card` — isMobile: true
 
 ```ts
 interface CardProps {
-  title?: string;
-  subtitle?: string;
-  description?: string;
-  image?: { src?: string; alt?: string };
-  anchor?: { href?: string; target?: string; title?: string };
-  size?: "sm" | "md" | "lg";
-  variant?: "ghost" | "outline" | "filled" | "elevated";
-  className?: string;
+  title?: string
+  subtitle?: string
+  description?: string
+  image?: ImageProps
+  anchor?: LinkProps
+  size?: 'sm' | 'md' | 'lg'
+  variant?: 'ghost' | 'outline' | 'filled' | 'elevated'
+  className?: string
+  children?: React.ReactNode
 }
 ```
 
-**Web:**
-
-```tsx
-import { Card } from "@/components/ui/card";
-import { Heading } from "@/components/ui/heading";
-import { Text } from "@/components/ui/text";
-import { Image } from "@/components/ui/image";
-import { Link, LinkText } from "@/components/ui/link";
-
-export default function WapCard({
-  title,
-  subtitle,
-  description,
-  image,
-  anchor,
-  size = "md",
-  variant = "outline",
-  className,
-}: CardProps) {
-  return (
-    <Card size={size} variant={variant} className={className}>
-      {image?.src && (
-        <Image
-          source={{ uri: image.src }}
-          alt={image.alt || title || ""}
-          className="w-full h-48 object-cover"
-        />
-      )}
-      {title && <Heading size="md">{title}</Heading>}
-      {subtitle && (
-        <Text size="sm" className="text-typography-500">
-          {subtitle}
-        </Text>
-      )}
-      {description && <Text size="sm">{description}</Text>}
-      {anchor?.href && (
-        <Link href={anchor.href} isExternal={anchor.target === "_blank"}>
-          <LinkText>{anchor.title || "Read more"}</LinkText>
-        </Link>
-      )}
-    </Card>
-  );
-}
-```
-
-**Mobile:**
-
-```tsx
-import { Card } from "@/components/ui/card";
-import { Pressable } from "@/components/ui/pressable";
-import { Linking } from "react-native";
-import { getCDNImage } from "../../utils/path";
-
-export default function WapCard({
-  title,
-  subtitle,
-  description,
-  image,
-  anchor,
-  size = "md",
-  variant = "outline",
-  className,
-}: CardProps) {
-  const imgSrc = image?.src ? getCDNImage(image.src) : undefined;
-  return (
-    <Pressable onPress={() => anchor?.href && Linking.openURL(anchor.href)}>
-      <Card size={size} variant={variant} className={className}>
-        {imgSrc && (
-          <Image
-            source={{ uri: imgSrc }}
-            alt={image?.alt || ""}
-            className="w-full h-48"
-          />
-        )}
-        {title && <Heading size="md">{safeText(title)}</Heading>}
-        {subtitle && (
-          <Text size="sm" className="text-typography-500">
-            {safeText(subtitle)}
-          </Text>
-        )}
-        {description && <Text size="sm">{safeText(description)}</Text>}
-      </Card>
-    </Pressable>
-  );
-}
-```
+**Note:** gluestack-ui v4 does not have a first-class `Card` component. Build using `Box`, `VStack`, `Heading`, `Text`, `Image` from gluestack-ui v4.
 
 ---
 
-### `card-list` — Card Grid
+### `card-list` — isMobile: true
 
-**Admin Props:** `cards?: CardProps[]` + column group breakpoints (same as `ColumnProps`)
-
-**Web:**
-
-```tsx
-import { Box } from "@/components/ui/box";
-import WapCard from "../card";
-
-export default function CardList({
-  cards = [],
-  className,
-}: {
-  cards?: any[];
-  className?: string;
-}) {
-  return (
-    <Box className={`flex flex-wrap gap-4 ${className || ""}`}>
-      {cards.map((card, i) => (
-        <WapCard key={i} {...card} />
-      ))}
-    </Box>
-  );
+```ts
+interface CardListProps {
+  cards?: CardProps[]
+  xs?: { size?: number }
+  sm?: { size?: number }
+  md?: { size?: number }
+  lg?: { size?: number }
+  xl?: { size?: number }
+  className?: string
 }
 ```
 
-**Mobile:** Use `FlatList` with `WapCard`.
+Render a grid of `Card` components from the `cards` array. Use breakpoint `size` to determine column count.
 
 ---
 
-### `avatar` — Avatar
-
-**Admin Props (from `AVATAR_PROPS`):**
+### `avatar` — isMobile: true
 
 ```ts
 interface AvatarProps {
-  source?: { src?: string };
-  name?: string;
-  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
-  showBadge?: boolean;
-  className?: string;
+  source?: ImageProps
+  name?: string
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+  showBadge?: boolean
+  className?: string
 }
 ```
 
-**Web & Mobile:**
-
+**gluestack-ui v4 default:**
 ```tsx
-import {
-  Avatar,
-  AvatarImage,
-  AvatarFallbackText,
-  AvatarBadge,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallbackText, AvatarBadge } from "@/components/ui/avatar"
 
-export default function WapAvatar({
-  source,
-  name,
-  size = "md",
-  showBadge,
-  className,
-}: AvatarProps) {
+export default function WapAvatar({ source, name = '', size = 'md', showBadge, className }: AvatarProps) {
   return (
     <Avatar size={size} className={className}>
-      {source?.src ? (
-        <AvatarImage source={{ uri: source.src }} />
-      ) : (
-        <AvatarFallbackText>{safeText(name)}</AvatarFallbackText>
-      )}
+      {source?.src ? <AvatarImage source={{ uri: source.src }} /> : null}
+      <AvatarFallbackText>{name}</AvatarFallbackText>
       {showBadge && <AvatarBadge />}
     </Avatar>
-  );
+  )
 }
 ```
 
 ---
 
-### `badge` — Badge
-
-**Admin Props (from `BADGE_PROPS`):**
+### `badge` — isMobile: true
 
 ```ts
-interface BadgeProps {
-  text?: string;
-  action?: "info" | "success" | "warning" | "error" | "muted";
-  variant?: "solid" | "outline";
-  size?: "sm" | "md" | "lg";
-  className?: string;
+interface WapBadgeProps {
+  text: string
+  action?: 'info' | 'success' | 'warning' | 'error' | 'muted'
+  variant?: 'solid' | 'outline'
+  size?: 'sm' | 'md' | 'lg'
+  className?: string
 }
 ```
 
-**Web & Mobile:**
-
+**gluestack-ui v4 default:**
 ```tsx
-import { Badge, BadgeText } from "@/components/ui/badge";
-
-export default function WapBadge({
-  text,
-  action = "info",
-  variant = "solid",
-  size = "md",
-  className,
-}: BadgeProps) {
-  return (
-    <Badge action={action} variant={variant} size={size} className={className}>
-      <BadgeText>{safeText(text)}</BadgeText>
-    </Badge>
-  );
+import { Badge, BadgeText } from "@/components/ui/badge"
+export default function WapBadge({ text, action = 'info', variant = 'solid', size = 'md', className }: WapBadgeProps) {
+  return <Badge action={action} variant={variant} size={size} className={className}><BadgeText>{text}</BadgeText></Badge>
 }
 ```
 
 ---
 
-### `divider` — Divider
-
-**Admin Props (from `DIVIDER_PROPS`):** `orientation?: 'horizontal' | 'vertical'`
-
-```tsx
-import { Divider } from "@/components/ui/divider";
-export default function WapDivider({
-  orientation = "horizontal",
-  className,
-}: any) {
-  return <Divider orientation={orientation} className={className} />;
-}
-```
-
----
-
-## Feedback Components
-
-### `spinner` — Loading Spinner
-
-**Admin Props (from `SPINNER_PROPS`):** `size?: 'small' | 'large'`, `color?: string`
-
-```tsx
-import { Spinner } from "@/components/ui/spinner";
-export default function WapSpinner({ size = "small", className }: any) {
-  return <Spinner size={size} className={className} />;
-}
-```
-
----
-
-### `alert` — Alert Message
-
-**Admin Props (from `ALERT_PROPS`):**
+### `divider` — isMobile: true
 
 ```ts
-interface AlertProps {
-  text?: string;
-  action?: "info" | "success" | "warning" | "error" | "muted";
-  variant?: "solid" | "outline";
-  showIcon?: boolean;
-  className?: string;
+interface WapDividerProps {
+  orientation?: 'horizontal' | 'vertical'
+  className?: string
 }
 ```
 
-**Web & Mobile:**
+gluestack-ui v4: `import { Divider } from "@/components/ui/divider"` — pass `orientation` directly.
 
+---
+
+### `table` — isMobile: false (web only)
+
+```ts
+interface TableColumnDef {
+  header: string
+  key: string
+}
+
+interface WapTableProps {
+  dataKey: string                    // query key — data is in refs.queries[dataKey] or props[dataKey]
+  columns: TableColumnDef[]
+  showCaption?: boolean
+  caption?: string
+  className?: string
+  [key: string]: any                 // dynamic data from refs
+}
+```
+
+**Implementation note:** Access row data via `props[dataKey]` or `refs.queries[dataKey]` (resolved into spread props).
+
+---
+
+### `skeleton` — isMobile: true
+
+```ts
+interface SkeletonProps {
+  variant?: 'rounded' | 'sharp' | 'circular'
+  speed?: number
+  isText?: boolean
+  lines?: number
+  className?: string
+}
+```
+
+**gluestack-ui v4 default:**
 ```tsx
-import { Alert, AlertIcon, AlertText } from "@/components/ui/alert";
-import {
-  InfoIcon,
-  CheckCircleIcon,
-  AlertTriangleIcon,
-  AlertCircleIcon,
-} from "@/components/ui/icon";
+import { Skeleton, SkeletonText } from "@/components/ui/skeleton"
+export default function WapSkeleton({ variant = 'rounded', isText, lines = 3, className }: SkeletonProps) {
+  if (isText) return <SkeletonText lines={lines} className={className} />
+  return <Skeleton variant={variant} className={`h-24 ${className ?? ''}`} />
+}
+```
 
-const ACTION_ICONS: Record<string, any> = {
-  info: InfoIcon,
-  success: CheckCircleIcon,
-  warning: AlertTriangleIcon,
-  error: AlertCircleIcon,
-  muted: InfoIcon,
-};
+---
 
-export default function WapAlert({
-  text,
-  action = "info",
-  variant = "solid",
-  showIcon = true,
-  className,
-}: AlertProps) {
+---
+
+## GROUP: feedback
+
+### `spinner` — isMobile: true
+
+```ts
+interface SpinnerProps {
+  size?: 'small' | 'large'
+  color?: string
+  className?: string
+}
+```
+
+gluestack-ui v4: `import { Spinner } from "@/components/ui/spinner"` — pass all props directly.
+
+---
+
+### `alert` — isMobile: true
+
+```ts
+interface WapAlertProps {
+  text: string
+  action?: 'info' | 'success' | 'warning' | 'error' | 'muted'
+  variant?: 'solid' | 'outline'
+  showIcon?: boolean
+  iconName?: string
+  className?: string
+}
+```
+
+**gluestack-ui v4 default:**
+```tsx
+import { Alert, AlertText, AlertIcon } from "@/components/ui/alert"
+import * as LucideIcons from "lucide-react-native"
+
+export default function WapAlert({ text, action = 'info', variant = 'solid', showIcon, iconName, className }: WapAlertProps) {
+  const LucideIcon = iconName ? (LucideIcons as any)[iconName] : null
   return (
     <Alert action={action} variant={variant} className={className}>
-      {showIcon && <AlertIcon as={ACTION_ICONS[action]} />}
-      <AlertText>{safeText(text)}</AlertText>
+      {showIcon && LucideIcon && <AlertIcon as={LucideIcon} />}
+      <AlertText>{text}</AlertText>
     </Alert>
-  );
+  )
 }
 ```
 
 ---
 
-### `progress` — Progress Bar
-
-**Admin Props (from `PROGRESS_PROPS`):**
+### `progress` — isMobile: true
 
 ```ts
 interface ProgressProps {
-  value?: number;
-  size?: "xs" | "sm" | "md" | "lg" | "xl";
-  showLabel?: boolean;
-  label?: string;
-  className?: string;
+  value: number        // 0–100
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  showLabel?: boolean
+  label?: string
+  className?: string
 }
 ```
 
-**Web & Mobile:**
-
+**gluestack-ui v4 default:**
 ```tsx
-import { Progress, ProgressFilledTrack } from "@/components/ui/progress";
-import { Text } from "@/components/ui/text";
-import { VStack } from "@/components/ui/vstack";
-
-export default function WapProgress({
-  value = 0,
-  size = "md",
-  showLabel,
-  label,
-  className,
-}: ProgressProps) {
+import { Progress, ProgressFilledTrack } from "@/components/ui/progress"
+export default function WapProgress({ value, size = 'md', showLabel, label, className }: ProgressProps) {
   return (
-    <VStack className={className}>
-      {showLabel && <Text size="sm">{label || `${value}%`}</Text>}
-      <Progress value={value} size={size}>
+    <div>
+      {showLabel && <span className="text-sm">{label ?? `${value}%`}</span>}
+      <Progress value={value} size={size} className={className}>
         <ProgressFilledTrack />
       </Progress>
-    </VStack>
-  );
+    </div>
+  )
 }
 ```
 
 ---
 
-## Form Components
+### `toast` — isMobile: true
 
-> All form components use `FormControl` wrapper for `label`, `helperText`, and `isDisabled` / `isRequired` state.
+```ts
+interface WapToastProps {
+  title: string
+  description?: string
+  action?: 'info' | 'success' | 'warning' | 'error' | 'muted'
+  variant?: 'solid' | 'outline'
+  placement?: 'top' | 'top left' | 'top right' | 'bottom' | 'bottom left' | 'bottom right'
+  duration?: number
+  className?: string
+}
+```
 
-### `input` — Text Input
+**Implementation note:** Toast is triggered programmatically. Use `useToast()` hook from gluestack-ui v4. In the page builder, render a preview toast or a trigger button.
 
-**Admin Props (from `INPUT_PROPS`):**
+---
+
+---
+
+## GROUP: disclosure
+
+### `accordion` — isMobile: true
+
+```ts
+interface AccordionItem {
+  title: string
+  content: string
+  isDisabled?: boolean
+}
+
+interface AccordionProps {
+  type?: 'single' | 'multiple'
+  variant?: 'filled' | 'unfilled'
+  items: AccordionItem[]
+  className?: string
+}
+```
+
+**gluestack-ui v4 default:**
+```tsx
+import {
+  Accordion, AccordionItem, AccordionHeader, AccordionTrigger,
+  AccordionTitleText, AccordionContent, AccordionContentText,
+} from "@/components/ui/accordion"
+
+export default function WapAccordion({ type = 'single', variant = 'filled', items, className }: AccordionProps) {
+  return (
+    <Accordion type={type} variant={variant} className={className}>
+      {items.map((item, i) => (
+        <AccordionItem key={i} value={`item-${i}`} isDisabled={item.isDisabled}>
+          <AccordionHeader>
+            <AccordionTrigger>
+              <AccordionTitleText>{item.title}</AccordionTitleText>
+            </AccordionTrigger>
+          </AccordionHeader>
+          <AccordionContent>
+            <AccordionContentText>{item.content}</AccordionContentText>
+          </AccordionContent>
+        </AccordionItem>
+      ))}
+    </Accordion>
+  )
+}
+```
+
+---
+
+### `tabs` — isMobile: true
+
+```ts
+interface TabItem {
+  label: string
+  value: string
+  iconName?: string
+  content: string
+}
+
+interface TabsProps {
+  variant?: 'underlined' | 'filled' | 'enclosed'
+  orientation?: 'horizontal' | 'vertical'
+  size?: 'sm' | 'md' | 'lg'
+  items: TabItem[]
+  className?: string
+}
+```
+
+**gluestack-ui v4 default:**
+```tsx
+import { Tabs, TabsList, TabsTrigger, TabsContent, TabsTriggerText } from "@/components/ui/tabs"
+
+export default function WapTabs({ items, orientation = 'horizontal', className }: TabsProps) {
+  return (
+    <Tabs defaultValue={items[0]?.value} orientation={orientation} className={className}>
+      <TabsList>
+        {items.map((item) => (
+          <TabsTrigger key={item.value} value={item.value}>
+            <TabsTriggerText>{item.label}</TabsTriggerText>
+          </TabsTrigger>
+        ))}
+      </TabsList>
+      {items.map((item) => (
+        <TabsContent key={item.value} value={item.value}>{item.content}</TabsContent>
+      ))}
+    </Tabs>
+  )
+}
+```
+
+---
+
+---
+
+## GROUP: overlay
+
+> Overlay components require open/close state. In the page builder they render static preview.
+> In production, the trigger is typically a Button that opens the overlay.
+
+### `modal` — isMobile: true
+
+```ts
+interface ModalProps {
+  title?: string
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'full'
+  showCloseButton?: boolean
+  className?: string
+  children?: React.ReactNode
+}
+```
+
+---
+
+### `drawer` — isMobile: true
+
+```ts
+interface DrawerProps {
+  title?: string
+  placement?: 'left' | 'right' | 'top' | 'bottom'
+  showCloseButton?: boolean
+  className?: string
+  children?: React.ReactNode
+}
+```
+
+---
+
+### `actionsheet` — isMobile: true
+
+```ts
+interface ActionsheetItem {
+  text: string
+  iconName?: string
+  isDisabled?: boolean
+}
+
+interface ActionsheetProps {
+  snapPoints?: number[]
+  items: ActionsheetItem[]
+  className?: string
+}
+```
+
+---
+
+### `menu` — isMobile: true
+
+```ts
+interface MenuItem {
+  label: string
+  key: string
+  iconName?: string
+}
+
+interface MenuProps {
+  placement?: 'top' | 'bottom' | 'left' | 'right'
+  items: MenuItem[]
+  className?: string
+  children?: React.ReactNode
+}
+```
+
+---
+
+### `popover` — isMobile: true
+
+```ts
+interface PopoverProps {
+  title?: string
+  body?: string
+  placement?: 'top' | 'bottom' | 'left' | 'right'
+  showArrow?: boolean
+  className?: string
+  children?: React.ReactNode
+}
+```
+
+---
+
+### `alert-dialog` — isMobile: true
+
+```ts
+interface AlertDialogProps {
+  title?: string
+  body?: string
+  confirmText?: string
+  cancelText?: string
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'full'
+  className?: string
+  children?: React.ReactNode
+}
+```
+
+---
+
+### `tooltip` — isMobile: true
+
+```ts
+interface TooltipProps {
+  text: string
+  placement?: 'top' | 'bottom' | 'left' | 'right'
+  className?: string
+  children?: React.ReactNode
+}
+```
+
+**gluestack-ui v4 default:**
+```tsx
+import { Tooltip, TooltipContent, TooltipText } from "@/components/ui/tooltip"
+export default function WapTooltip({ text, placement = 'top', className, children }: TooltipProps) {
+  return (
+    <Tooltip placement={placement} className={className}>
+      {children}
+      <TooltipContent><TooltipText>{text}</TooltipText></TooltipContent>
+    </Tooltip>
+  )
+}
+```
+
+---
+
+---
+
+## GROUP: form
+
+### `form-control` — isMobile: true
+
+```ts
+interface FormControlProps {
+  label?: string
+  helperText?: string
+  errorText?: string
+  isDisabled?: boolean
+  isRequired?: boolean
+  isInvalid?: boolean
+  isReadOnly?: boolean
+  className?: string
+  children?: React.ReactNode
+}
+```
+
+**gluestack-ui v4 default:**
+```tsx
+import { FormControl, FormControlLabel, FormControlLabelText,
+         FormControlHelper, FormControlHelperText,
+         FormControlError, FormControlErrorText } from "@/components/ui/form-control"
+
+export default function WapFormControl({ label, helperText, errorText, isDisabled, isRequired, isInvalid, isReadOnly, className, children }: FormControlProps) {
+  return (
+    <FormControl isDisabled={isDisabled} isRequired={isRequired} isInvalid={isInvalid} isReadOnly={isReadOnly} className={className}>
+      {label && <FormControlLabel><FormControlLabelText>{label}</FormControlLabelText></FormControlLabel>}
+      {children}
+      {helperText && <FormControlHelper><FormControlHelperText>{helperText}</FormControlHelperText></FormControlHelper>}
+      {errorText && isInvalid && <FormControlError><FormControlErrorText>{errorText}</FormControlErrorText></FormControlError>}
+    </FormControl>
+  )
+}
+```
+
+---
+
+### `input` — isMobile: true
 
 ```ts
 interface InputProps {
-  label?: string;
-  placeholder?: string;
-  type?: "text" | "password";
-  size?: "sm" | "md" | "lg" | "xl";
-  variant?: "outline" | "underlined" | "rounded";
-  helperText?: string;
-  isDisabled?: boolean;
-  isRequired?: boolean;
-  className?: string;
+  label?: string
+  placeholder?: string
+  type?: 'text' | 'password' | 'email' | 'number'
+  variant?: 'outline' | 'underlined' | 'rounded'
+  size?: 'sm' | 'md' | 'lg' | 'xl'
+  helperText?: string
+  errorText?: string
+  isDisabled?: boolean
+  isRequired?: boolean
+  isInvalid?: boolean
+  isReadOnly?: boolean
+  className?: string
 }
 ```
 
-**Web & Mobile:**
-
+**gluestack-ui v4 default:**
 ```tsx
-import {
-  FormControl,
-  FormControlLabel,
-  FormControlLabelText,
-  FormControlHelper,
-  FormControlHelperText,
-} from "@/components/ui/form-control";
-import { Input, InputField } from "@/components/ui/input";
+import { FormControl, FormControlLabel, FormControlLabelText,
+         FormControlHelper, FormControlHelperText,
+         FormControlError, FormControlErrorText } from "@/components/ui/form-control"
+import { Input, InputField } from "@/components/ui/input"
 
-export default function WapInput({
-  label,
-  placeholder,
-  type = "text",
-  size = "md",
-  variant = "outline",
-  helperText,
-  isDisabled,
-  isRequired,
-  className,
-}: InputProps) {
+export default function WapInput({ label, placeholder, type = 'text', variant = 'outline', size = 'md', helperText, errorText, isDisabled, isRequired, isInvalid, isReadOnly, className }: InputProps) {
   return (
-    <FormControl
-      isDisabled={isDisabled}
-      isRequired={isRequired}
-      className={className}
-    >
-      {label && (
-        <FormControlLabel>
-          <FormControlLabelText>{label}</FormControlLabelText>
-        </FormControlLabel>
-      )}
-      <Input size={size} variant={variant}>
-        <InputField placeholder={placeholder} type={type} />
+    <FormControl isDisabled={isDisabled} isRequired={isRequired} isInvalid={isInvalid} isReadOnly={isReadOnly}>
+      {label && <FormControlLabel><FormControlLabelText>{label}</FormControlLabelText></FormControlLabel>}
+      <Input variant={variant} size={size} className={className}>
+        <InputField type={type} placeholder={placeholder} />
       </Input>
-      {helperText && (
-        <FormControlHelper>
-          <FormControlHelperText>{helperText}</FormControlHelperText>
-        </FormControlHelper>
-      )}
+      {helperText && <FormControlHelper><FormControlHelperText>{helperText}</FormControlHelperText></FormControlHelper>}
+      {errorText && isInvalid && <FormControlError><FormControlErrorText>{errorText}</FormControlErrorText></FormControlError>}
     </FormControl>
-  );
+  )
 }
 ```
 
 ---
 
-### `select` — Select Dropdown
-
-**Admin Props (from `SELECT_PROPS`):**
+### `select` — isMobile: true
 
 ```ts
 interface SelectOption {
-  label: string;
-  value: string;
+  label: string
+  value: string
 }
+
 interface SelectProps {
-  label?: string;
-  placeholder?: string;
-  options?: SelectOption[];
-  size?: "sm" | "md" | "lg" | "xl";
-  variant?: "outline" | "underlined" | "rounded";
-  isDisabled?: boolean;
-  className?: string;
+  label?: string
+  placeholder?: string
+  options: SelectOption[]
+  variant?: 'outline' | 'underlined' | 'rounded'
+  size?: 'sm' | 'md' | 'lg' | 'xl'
+  helperText?: string
+  isDisabled?: boolean
+  isRequired?: boolean
+  isInvalid?: boolean
+  isReadOnly?: boolean
+  className?: string
 }
 ```
 
-**Web & Mobile:**
-
+**gluestack-ui v4 default:**
 ```tsx
-import {
-  Select,
-  SelectTrigger,
-  SelectInput,
-  SelectPortal,
-  SelectContent,
-  SelectItem,
-  SelectDragIndicatorWrapper,
-  SelectDragIndicator,
-} from "@/components/ui/select";
-import {
-  FormControl,
-  FormControlLabel,
-  FormControlLabelText,
-} from "@/components/ui/form-control";
+import { Select, SelectTrigger, SelectInput, SelectPortal,
+         SelectBackdrop, SelectContent, SelectItem } from "@/components/ui/select"
 
-export default function WapSelect({
-  label,
-  placeholder,
-  options = [],
-  size = "md",
-  variant = "outline",
-  isDisabled,
-  className,
-}: SelectProps) {
+export default function WapSelect({ label, placeholder, options = [], variant = 'outline', size = 'md', isDisabled, className }: SelectProps) {
   return (
-    <FormControl isDisabled={isDisabled} className={className}>
-      {label && (
-        <FormControlLabel>
-          <FormControlLabelText>{label}</FormControlLabelText>
-        </FormControlLabel>
-      )}
-      <Select>
-        <SelectTrigger variant={variant} size={size}>
-          <SelectInput placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectPortal>
-          <SelectContent>
-            <SelectDragIndicatorWrapper>
-              <SelectDragIndicator />
-            </SelectDragIndicatorWrapper>
-            {options.map((opt) => (
-              <SelectItem key={opt.value} label={opt.label} value={opt.value} />
-            ))}
-          </SelectContent>
-        </SelectPortal>
-      </Select>
-    </FormControl>
-  );
+    <Select isDisabled={isDisabled}>
+      <SelectTrigger variant={variant} size={size} className={className}>
+        <SelectInput placeholder={placeholder ?? 'Select...'} />
+      </SelectTrigger>
+      <SelectPortal>
+        <SelectBackdrop />
+        <SelectContent>
+          {options.map((opt) => (
+            <SelectItem key={opt.value} label={opt.label} value={opt.value} />
+          ))}
+        </SelectContent>
+      </SelectPortal>
+    </Select>
+  )
 }
 ```
 
 ---
 
-### `switch` — Toggle Switch
-
-**Admin Props (from `SWITCH_PROPS`):**
+### `switch` — isMobile: true
 
 ```ts
 interface SwitchProps {
-  label?: string;
-  size?: "sm" | "md" | "lg";
-  isDisabled?: boolean;
-  className?: string;
+  label?: string
+  size?: 'sm' | 'md' | 'lg'
+  isDisabled?: boolean
+  className?: string
 }
 ```
 
+**gluestack-ui v4 default:**
 ```tsx
-import { Switch } from "@/components/ui/switch";
-import { HStack } from "@/components/ui/hstack";
-import { Text } from "@/components/ui/text";
+import { Switch } from "@/components/ui/switch"
+import { HStack } from "@/components/ui/hstack"
+import { Text } from "@/components/ui/text"
 
-export default function WapSwitch({
-  label,
-  size = "md",
-  isDisabled,
-  className,
-}: SwitchProps) {
+export default function WapSwitch({ label, size = 'md', isDisabled, className }: SwitchProps) {
   return (
-    <HStack space="sm" className={`items-center ${className || ""}`}>
-      {label && <Text size="sm">{safeText(label)}</Text>}
+    <HStack space="sm" className={`items-center ${className ?? ''}`}>
       <Switch size={size} isDisabled={isDisabled} />
+      {label && <Text size="sm">{label}</Text>}
     </HStack>
-  );
+  )
 }
 ```
 
 ---
 
-### `checkbox` — Checkbox
-
-**Admin Props (from `CHECKBOX_PROPS`):**
+### `checkbox` — isMobile: true
 
 ```ts
 interface CheckboxOption {
-  label: string;
-  value: string;
+  label: string
+  value: string
 }
+
 interface CheckboxProps {
-  label?: string;
-  options?: CheckboxOption[];
-  size?: "sm" | "md" | "lg";
-  isDisabled?: boolean;
-  className?: string;
+  label?: string
+  options?: CheckboxOption[]
+  size?: 'sm' | 'md' | 'lg'
+  isDisabled?: boolean
+  className?: string
 }
 ```
 
+**gluestack-ui v4 default:**
 ```tsx
-import {
-  Checkbox,
-  CheckboxIndicator,
-  CheckboxLabel,
-  CheckboxIcon,
-} from "@/components/ui/checkbox";
-import { CheckIcon } from "@/components/ui/icon";
-import { VStack } from "@/components/ui/vstack";
+import { CheckboxGroup, Checkbox, CheckboxIndicator, CheckboxIcon, CheckboxLabel } from "@/components/ui/checkbox"
+import { CheckIcon } from "lucide-react-native"
 
-export default function WapCheckbox({
-  label,
-  options,
-  size = "md",
-  isDisabled,
-  className,
-}: CheckboxProps) {
-  if (options?.length) {
-    return (
-      <VStack space="sm" className={className}>
-        {options.map((opt) => (
-          <Checkbox
-            key={opt.value}
-            value={opt.value}
-            size={size}
-            isDisabled={isDisabled}
-          >
-            <CheckboxIndicator>
-              <CheckboxIcon as={CheckIcon} />
-            </CheckboxIndicator>
-            <CheckboxLabel>{opt.label}</CheckboxLabel>
-          </Checkbox>
-        ))}
-      </VStack>
-    );
-  }
+export default function WapCheckbox({ options = [], size = 'md', isDisabled, className }: CheckboxProps) {
   return (
-    <Checkbox
-      value="default"
-      size={size}
-      isDisabled={isDisabled}
-      className={className}
-    >
-      <CheckboxIndicator>
-        <CheckboxIcon as={CheckIcon} />
-      </CheckboxIndicator>
-      {label && <CheckboxLabel>{safeText(label)}</CheckboxLabel>}
-    </Checkbox>
-  );
+    <CheckboxGroup isDisabled={isDisabled} className={className}>
+      {options.map((opt) => (
+        <Checkbox key={opt.value} value={opt.value} size={size}>
+          <CheckboxIndicator><CheckboxIcon as={CheckIcon} /></CheckboxIndicator>
+          <CheckboxLabel>{opt.label}</CheckboxLabel>
+        </Checkbox>
+      ))}
+    </CheckboxGroup>
+  )
 }
 ```
 
 ---
 
-### `radio` — Radio Group
-
-**Admin Props (from `RADIO_PROPS`):**
+### `radio` — isMobile: true
 
 ```ts
 interface RadioOption {
-  label: string;
-  value: string;
+  label: string
+  value: string
 }
+
 interface RadioProps {
-  options?: RadioOption[];
-  size?: "sm" | "md" | "lg";
-  isDisabled?: boolean;
-  className?: string;
+  options: RadioOption[]
+  size?: 'sm' | 'md' | 'lg'
+  isDisabled?: boolean
+  className?: string
 }
 ```
 
+**gluestack-ui v4 default:**
 ```tsx
-import {
-  RadioGroup,
-  Radio,
-  RadioIndicator,
-  RadioLabel,
-  RadioIcon,
-} from "@/components/ui/radio";
-import { CircleIcon } from "@/components/ui/icon";
-import { VStack } from "@/components/ui/vstack";
+import { RadioGroup, Radio, RadioIndicator, RadioIcon, RadioLabel } from "@/components/ui/radio"
+import { CircleIcon } from "lucide-react-native"
 
-export default function WapRadio({
-  options = [],
-  size = "md",
-  isDisabled,
-  className,
-}: RadioProps) {
+export default function WapRadio({ options, size = 'md', isDisabled, className }: RadioProps) {
   return (
-    <RadioGroup className={className}>
-      <VStack space="sm">
-        {options.map((opt) => (
-          <Radio
-            key={opt.value}
-            value={opt.value}
-            size={size}
-            isDisabled={isDisabled}
-          >
-            <RadioIndicator>
-              <RadioIcon as={CircleIcon} />
-            </RadioIndicator>
-            <RadioLabel>{opt.label}</RadioLabel>
-          </Radio>
-        ))}
-      </VStack>
+    <RadioGroup isDisabled={isDisabled} className={className}>
+      {options.map((opt) => (
+        <Radio key={opt.value} value={opt.value} size={size}>
+          <RadioIndicator><RadioIcon as={CircleIcon} /></RadioIndicator>
+          <RadioLabel>{opt.label}</RadioLabel>
+        </Radio>
+      ))}
     </RadioGroup>
-  );
+  )
 }
 ```
 
 ---
 
-### `textarea` — Multi-line Input
-
-**Admin Props (from `TEXTAREA_PROPS`):**
+### `textarea` — isMobile: true
 
 ```ts
 interface TextareaProps {
-  label?: string;
-  placeholder?: string;
-  size?: "sm" | "md" | "lg" | "xl";
-  numberOfLines?: number;
-  helperText?: string;
-  isDisabled?: boolean;
-  isReadOnly?: boolean;
-  className?: string;
+  label?: string
+  placeholder?: string
+  size?: 'sm' | 'md' | 'lg' | 'xl'
+  numberOfLines?: number
+  helperText?: string
+  errorText?: string
+  isDisabled?: boolean
+  isRequired?: boolean
+  isInvalid?: boolean
+  isReadOnly?: boolean
+  className?: string
 }
 ```
 
+**gluestack-ui v4 default:**
 ```tsx
-import {
-  FormControl,
-  FormControlLabel,
-  FormControlLabelText,
-  FormControlHelper,
-  FormControlHelperText,
-} from "@/components/ui/form-control";
-import { Textarea, TextareaInput } from "@/components/ui/textarea";
-
-export default function WapTextarea({
-  label,
-  placeholder,
-  size = "md",
-  numberOfLines,
-  helperText,
-  isDisabled,
-  isReadOnly,
-  className,
-}: TextareaProps) {
+import { Textarea, TextareaInput } from "@/components/ui/textarea"
+export default function WapTextarea({ placeholder, size = 'md', numberOfLines, isDisabled, className }: TextareaProps) {
   return (
-    <FormControl
-      isDisabled={isDisabled}
-      isReadOnly={isReadOnly}
-      className={className}
-    >
-      {label && (
-        <FormControlLabel>
-          <FormControlLabelText>{label}</FormControlLabelText>
-        </FormControlLabel>
-      )}
-      <Textarea size={size}>
-        <TextareaInput
-          placeholder={placeholder}
-          numberOfLines={numberOfLines}
-        />
-      </Textarea>
-      {helperText && (
-        <FormControlHelper>
-          <FormControlHelperText>{helperText}</FormControlHelperText>
-        </FormControlHelper>
-      )}
-    </FormControl>
-  );
+    <Textarea size={size} isDisabled={isDisabled} className={className}>
+      <TextareaInput placeholder={placeholder} numberOfLines={numberOfLines} />
+    </Textarea>
+  )
 }
 ```
 
 ---
 
-### `slider` — Slider
-
-**Admin Props (from `SLIDER_PROPS`):**
+### `slider` — isMobile: true
 
 ```ts
 interface SliderProps {
-  value?: number;
-  minValue?: number;
-  maxValue?: number;
-  step?: number;
-  size?: "sm" | "md" | "lg";
-  showLabel?: boolean;
-  isDisabled?: boolean;
-  className?: string;
+  value?: number
+  minValue?: number
+  maxValue?: number
+  step?: number
+  size?: 'sm' | 'md' | 'lg'
+  orientation?: 'horizontal' | 'vertical'
+  showLabel?: boolean
+  isDisabled?: boolean
+  className?: string
 }
 ```
 
+**gluestack-ui v4 default:**
 ```tsx
-import {
-  Slider,
-  SliderTrack,
-  SliderFilledTrack,
-  SliderThumb,
-} from "@/components/ui/slider";
-import { Text } from "@/components/ui/text";
-import { VStack } from "@/components/ui/vstack";
-
-export default function WapSlider({
-  value = 0,
-  minValue = 0,
-  maxValue = 100,
-  step = 1,
-  size = "md",
-  showLabel,
-  isDisabled,
-  className,
-}: SliderProps) {
+import { Slider, SliderTrack, SliderFilledTrack, SliderThumb } from "@/components/ui/slider"
+export default function WapSlider({ value = 50, minValue = 0, maxValue = 100, step = 1, size = 'md', orientation = 'horizontal', isDisabled, className }: SliderProps) {
   return (
-    <VStack className={className}>
-      {showLabel && <Text size="sm">{value}</Text>}
-      <Slider
-        defaultValue={value}
-        minValue={minValue}
-        maxValue={maxValue}
-        step={step}
-        size={size}
-        isDisabled={isDisabled}
-      >
-        <SliderTrack>
-          <SliderFilledTrack />
-        </SliderTrack>
-        <SliderThumb />
-      </Slider>
-    </VStack>
-  );
+    <Slider defaultValue={value} minValue={minValue} maxValue={maxValue} step={step}
+            size={size} orientation={orientation} isDisabled={isDisabled} className={className}>
+      <SliderTrack><SliderFilledTrack /></SliderTrack>
+      <SliderThumb />
+    </Slider>
+  )
 }
 ```
 
 ---
 
-## `array-repeater` — Dynamic List
-
-Uses the SDK `ArrayRepeater` component directly — no gluestack wrapping needed.
-
-```tsx
-import { ArrayRepeater } from "@appaflytech/wappa-client/core/components";
-// In registry: case "array-repeater": return ArrayRepeater as any;
-```
-
-Props via `refs.repeater`:
+### `calendar` — isMobile: true
 
 ```ts
-{
-  repeater: {
-    type: 'query' | 'raw' | 'showcase',
-    ref: string,
-    mappings: Array<{ name: string; path: string; type: string }>
-  }
+interface CalendarProps {
+  label?: string
+  mode?: 'single' | 'multiple' | 'range'
+  helperText?: string
+  isDisabled?: boolean
+  isRequired?: boolean
+  isInvalid?: boolean
+  isReadOnly?: boolean
+  className?: string
 }
 ```
 
-Child components bind to abstract names via `refs`:
+---
 
-```json
-{
-  "name": "heading",
-  "refs": { "children": { "type": "repeater", "ref": "title" } }
+### `date-time-picker` — isMobile: true
+
+```ts
+interface DateTimePickerProps {
+  label?: string
+  mode?: 'date' | 'time' | 'datetime'
+  helperText?: string
+  isDisabled?: boolean
+  isRequired?: boolean
+  isInvalid?: boolean
+  isReadOnly?: boolean
+  className?: string
 }
 ```
+
+---
+
+## Summary: All 36 Components
+
+| name | group | isMobile | gluestack-ui v4 primitive |
+|------|-------|----------|--------------------------|
+| container | layout | false | custom div |
+| array-repeater | layout | true | SDK built-in |
+| box | layout | true | Box |
+| center | layout | true | Center |
+| hstack | layout | true | HStack |
+| vstack | layout | true | VStack |
+| grid | layout | true | Grid |
+| pressable | layout | true | Pressable |
+| row | layout | false | custom div |
+| column | layout | false | custom div |
+| section | layout | false | custom section element |
+| view | layout | true | handled by render() — no implementation needed |
+| heading | typography | true | Heading |
+| paragraph | typography | true | Text |
+| html | typography | false | div + dangerouslySetInnerHTML |
+| icon | typography | true | Icon + lucide-react(-native) |
+| image | media | true | Image |
+| video | media | true | video / expo-av Video |
+| iframe | media | false | iframe |
+| button | interactive | true | Button + ButtonText |
+| link | interactive | true | Link + LinkText |
+| fab | interactive | true | Fab + FabIcon + FabLabel |
+| card | display | true | Box + VStack (no native Card) |
+| card-list | display | true | Grid of Card components |
+| avatar | display | true | Avatar + AvatarImage + AvatarFallbackText |
+| badge | display | true | Badge + BadgeText |
+| divider | display | true | Divider |
+| table | display | false | Table + TableHeader + TableRow + TableData |
+| skeleton | display | true | Skeleton / SkeletonText |
+| spinner | feedback | true | Spinner |
+| alert | feedback | true | Alert + AlertIcon + AlertText |
+| progress | feedback | true | Progress + ProgressFilledTrack |
+| toast | feedback | true | useToast() hook |
+| accordion | disclosure | true | Accordion + AccordionItem + ... |
+| tabs | disclosure | true | Tabs + TabsList + TabsTrigger + TabsContent |
+| modal | overlay | true | Modal + ModalContent + ModalHeader + ... |
+| drawer | overlay | true | Drawer + DrawerContent + ... |
+| actionsheet | overlay | true | Actionsheet + ActionsheetItem + ... |
+| menu | overlay | true | Menu + MenuItem + ... |
+| popover | overlay | true | Popover + PopoverContent + ... |
+| alert-dialog | overlay | true | AlertDialog + AlertDialogContent + ... |
+| tooltip | overlay | true | Tooltip + TooltipContent + TooltipText |
+| form-control | form | true | FormControl + FormControlLabel + ... |
+| input | form | true | Input + InputField |
+| select | form | true | Select + SelectTrigger + SelectContent + ... |
+| switch | form | true | Switch |
+| checkbox | form | true | CheckboxGroup + Checkbox + ... |
+| radio | form | true | RadioGroup + Radio + ... |
+| textarea | form | true | Textarea + TextareaInput |
+| slider | form | true | Slider + SliderTrack + SliderFilledTrack + SliderThumb |
+| calendar | form | true | Calendar |
+| date-time-picker | form | true | DateTimePicker |
