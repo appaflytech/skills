@@ -21,13 +21,13 @@ Whenever the user says "create a wappa project" or "build an app with wappa", **
 
 **Ask:** Which UI framework do you want to use?
 
-| Option | Web | Mobile |
-|--------|-----|--------|
-| **gluestack-ui v4** ⭐ Default | ✅ NativeWind + RSC | ✅ GluestackUIProvider |
-| shadcn/ui | ✅ Radix-based | ❌ Not supported |
-| Tailwind CSS only | ✅ Plain HTML + className | ❌ Not supported |
-| NativeWind only | ❌ | ✅ StyleSheet + NativeWind |
-| Custom | Any | Any |
+| Option                         | Web                       | Mobile                     |
+| ------------------------------ | ------------------------- | -------------------------- |
+| **gluestack-ui v4** ⭐ Default | ✅ NativeWind + RSC       | ✅ GluestackUIProvider     |
+| shadcn/ui                      | ✅ Radix-based            | ❌ Not supported           |
+| Tailwind CSS only              | ✅ Plain HTML + className | ❌ Not supported           |
+| NativeWind only                | ❌                        | ✅ StyleSheet + NativeWind |
+| Custom                         | Any                       | Any                        |
 
 If the user does not specify → **use gluestack-ui v4**.
 
@@ -37,22 +37,20 @@ If the user does not specify → **use gluestack-ui v4**.
 
 - [ ] `core/render.tsx` — Converts PageComponent tree to React
 - [ ] `components/index.tsx` — Component registry (name → React component)
-- [ ] `components/wap/` — Component implementations
+- [ ] `components/ui/` — Component implementations (gluestack-ui v4 primitives)
+- [ ] `services/contextService.ts` — API data fetching (server)
 - [ ] `app/[[...pathname]]/page.tsx` — SSR entry
-- [ ] `app/[[...pathname]]/context.tsx` — Data fetching (server)
 - [ ] `app/[[...pathname]]/client.tsx` — AppContextProvider + render
-- [ ] `.env.local` — API URL, CDN, site key
+- [ ] `.env.local` — `NEXT_PUBLIC_API`, `NEXT_PUBLIC_CDN`, `NEXT_PUBLIC_SITE_KEY`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_ENV`
 
 **Mobile (Expo):**
 
-- [ ] `core/render.tsx` — Converts PageComponent tree to React Native
-- [ ] `components/index.tsx` — Component registry
-- [ ] `components/wap/` — Component implementations (RN)
+- [ ] `core/render.tsx` — Converts PageComponent tree to React Native (with handler compilation)
+- [ ] `components/index.tsx` — Component registry (90+ components)
 - [ ] `components/WapScreen.tsx` — Page loading and render component
 - [ ] `services/contextService.ts` — API data fetching service
 - [ ] `store/store.ts` — Zustand global state
-- [ ] `utils/path.ts` — CDN URL helper
-- [ ] `.env` — API URL, CDN
+- [ ] `.env` — `EXPO_PUBLIC_WAP_API`, `EXPO_PUBLIC_WAP_CDN`, `EXPO_PUBLIC_WAP_SITE_KEY`, `EXPO_PUBLIC_ENV`
 
 ### 4. Component Implementation Philosophy
 
@@ -71,12 +69,12 @@ Your Component Implementation
 
 ### 5. Sub-Skills (Load for Detailed Implementation)
 
-| Sub-Skill | File | When to Use |
-|-----------|------|-------------|
-| `wappa-skills:components` | [components.md](./components.md) | Full props contracts for all 36 components (from admin schema). Load this before implementing any component. |
-| `wappa-skills:web` | [web.md](./web.md) | Next.js project setup, routing, GluestackUIProvider for web |
-| `wappa-skills:mobile` | [mobile.md](./mobile.md) | Expo project setup, WapScreen, contextService, mobile render |
-| `wappa-skills:theme` | [theme.md](./theme.md) | Wappa theme system + gluestack-ui v4 theming |
+| Sub-Skill                 | File                             | When to Use                                                                                                   |
+| ------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `wappa-skills:components` | [components.md](./components.md) | Full props contracts for all 90+ components (from admin schema). Load this before implementing any component. |
+| `wappa-skills:web`        | [web.md](./web.md)               | Next.js project setup, routing, GluestackUIProvider for web                                                   |
+| `wappa-skills:mobile`     | [mobile.md](./mobile.md)         | Expo project setup, WapScreen, contextService, mobile render                                                  |
+| `wappa-skills:theme`      | [theme.md](./theme.md)           | Wappa theme system + gluestack-ui v4 theming                                                                  |
 
 ### 6. Setup Steps (Apply in Order)
 
@@ -112,17 +110,17 @@ render() function
 
 The admin organizes all components into 9 groups. These map to the tab panel in the builder:
 
-| Group key | Turkish Label | Component names |
-|-----------|--------------|-----------------|
-| `layout` | Düzen | container, array-repeater, box, center, hstack, vstack, grid, pressable, row, column, section, view |
-| `typography` | Metin | heading, paragraph, html, icon |
-| `media` | Medya | image, video, iframe |
-| `interactive` | Butonlar | button, link, fab |
-| `display` | Kartlar | card, card-list, avatar, badge, divider, table, skeleton |
-| `feedback` | Bildirim | spinner, alert, progress, toast |
-| `disclosure` | Sekmeler | accordion, tabs |
-| `overlay` | Pop-up | modal, drawer, actionsheet, menu, popover, alert-dialog, tooltip |
-| `form` | Form | form-control, input, select, switch, checkbox, radio, textarea, slider, calendar, date-time-picker |
+| Group key     | Turkish Label | Component names                                                                                     |
+| ------------- | ------------- | --------------------------------------------------------------------------------------------------- |
+| `layout`      | Düzen         | container, array-repeater, box, center, hstack, vstack, grid, pressable, row, column, section, view |
+| `typography`  | Metin         | heading, paragraph, html, icon                                                                      |
+| `media`       | Medya         | image, video, iframe                                                                                |
+| `interactive` | Butonlar      | button, link, fab                                                                                   |
+| `display`     | Kartlar       | card, card-list, avatar, badge, divider, table, skeleton                                            |
+| `feedback`    | Bildirim      | spinner, alert, progress, toast                                                                     |
+| `disclosure`  | Sekmeler      | accordion, tabs                                                                                     |
+| `overlay`     | Pop-up        | modal, drawer, actionsheet, menu, popover, alert-dialog, tooltip                                    |
+| `form`        | Form          | form-control, input, select, switch, checkbox, radio, textarea, slider, calendar, date-time-picker  |
 
 **`isMobile` field:** Each element has `isMobile: true | false`. Components with `isMobile: false` are web-only (e.g., `container`, `iframe`). On mobile, skip registering those or render `null`.
 
@@ -136,13 +134,13 @@ The admin organizes all components into 9 groups. These map to the tab panel in 
 import { PageComponent } from "@appaflytech/wappa-client/constants";
 
 type PageComponent = {
-  id: string;                     // Unique ID on the page
-  title: string;                  // Display name in admin
-  name: string;                   // Component registry key (e.g. "heading", "button")
-  icon: string;                   // Icon in Admin UI
-  props: Record<string, any>;     // Static props set by admin
-  refs: Record<string, any>;      // Resolved dynamic values (images, links, query results)
-  children: PageComponent[];      // Child components (for droppable/wrapper components)
+  id: string; // Unique ID on the page
+  title: string; // Display name in admin
+  name: string; // Component registry key (e.g. "heading", "button")
+  icon: string; // Icon in Admin UI
+  props: Record<string, any>; // Static props set by admin
+  refs: Record<string, any>; // Resolved dynamic values (images, links, query results)
+  children: PageComponent[]; // Child components (for droppable/wrapper components)
 };
 ```
 
@@ -158,10 +156,10 @@ type Page = {
   path: string;
   language: string;
   image: ImageProps;
-  fields?: Record<string, any>;              // DynamicEntity fields
+  fields?: Record<string, any>; // DynamicEntity fields
   metatags: PageMetaTags;
   localizations: Array<PageAlternate>;
-  layout: Array<PageComponent>;              // Root-level components
+  layout: Array<PageComponent>; // Root-level components
   views: Record<string, Array<PageComponent>>; // Named view sections (key = view ID)
   refs: RefsObject;
 };
@@ -176,11 +174,11 @@ type RefsObject = {
   links: Record<string, LinkReference>;
   navigations: Record<string, NavigationReference[]>;
   page: PageReference;
-  queries: Record<string, any>;             // Query results
+  queries: Record<string, any>; // Query results
   queryOptions: Record<string, any>;
-  componentqueries: Record<string, any>;    // Parameter-based queries
+  componentqueries: Record<string, any>; // Parameter-based queries
   showcases: Record<string, any>;
-  strings: Record<string, string>;          // i18n translation strings
+  strings: Record<string, string>; // i18n translation strings
   widgets: Record<string, PageComponent[]>; // Widget schemas
 };
 ```
@@ -189,11 +187,11 @@ type RefsObject = {
 
 ```ts
 type EnvironmentContext = {
-  cdn: string;          // CDN base URL
-  environment: string;  // "development" | "production"
-  key: string;          // Site key
-  service: string;      // API URL (base + "/" + siteKey)
-  url: string;          // Site domain URL
+  cdn: string; // CDN base URL
+  environment: string; // "development" | "production"
+  key: string; // Site key
+  service: string; // API URL (base + "/" + siteKey)
+  url: string; // Site domain URL
 };
 ```
 
@@ -209,17 +207,18 @@ bun add @appaflytech/wappa-client
 
 ### Subpath Exports
 
-| Import Path | Contents |
-|-------------|----------|
-| `@appaflytech/wappa-client/constants` | `PageComponent`, `EnvironmentContext`, `ImageProps` |
-| `@appaflytech/wappa-client/constants/types` | All TypeScript types |
-| `@appaflytech/wappa-client/constants/enums` | `NodeEnv` enum |
-| `@appaflytech/wappa-client/services` | `pageService`, `configService`, `siteService`, `queryService` |
-| `@appaflytech/wappa-client/core/classes` | `Environment` class |
-| `@appaflytech/wappa-client/core/components` | `ArrayRepeater`, `Error` components |
-| `@appaflytech/wappa-client/core/contexts` | `AppContextProvider`, `useApp` |
-| `@appaflytech/wappa-client/core/hooks` | `useClone`, `useMounted`, `useMobile` |
-| `@appaflytech/wappa-client/core/utils` | color, path, string utilities |
+| Import Path                                 | Contents                                                                                                                 |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `@appaflytech/wappa-client/constants`       | `PageComponent`, `EnvironmentContext`, `ImageProps`                                                                      |
+| `@appaflytech/wappa-client/constants/types` | All TypeScript types                                                                                                     |
+| `@appaflytech/wappa-client/constants/enums` | `NodeEnv` enum                                                                                                           |
+| `@appaflytech/wappa-client/services`        | `pageService`, `configService`, `siteService`, `queryService`                                                            |
+| `@appaflytech/wappa-client/core/classes`    | `Environment` class                                                                                                      |
+| `@appaflytech/wappa-client/core/components` | `ArrayRepeater`, `Error` components                                                                                      |
+| `@appaflytech/wappa-client/core/contexts`   | `AppContextProvider`, `useApp`                                                                                           |
+| `@appaflytech/wappa-client/core/hooks`      | `useClone`, `useMounted`, `useMobile`, `useOrientation`, `useSearchParams`, `useVar`, `useWidthResize`, `useCombineRefs` |
+| `@appaflytech/wappa-client/core/utils`      | color, path, string utilities, handler compiler                                                                          |
+| `@appaflytech/wappa-client/core/buses`      | `dataBus`, `formBus`, `uiBus` — reactive cross-component communication                                                   |
 
 ---
 
@@ -243,16 +242,24 @@ env.update({
 ## 5. Service Layer
 
 ```ts
-import { pageService, configService, siteService } from "@appaflytech/wappa-client/services";
+import {
+  pageService,
+  configService,
+  siteService,
+} from "@appaflytech/wappa-client/services";
 
 // Page by path
-const page = await pageService.get(env.context, { path: "/home", isMobile: false });
+const page = await pageService.get(env.context, {
+  path: "/home",
+  isMobile: false,
+});
 
 // Preview mode
 const page = await pageService.preview(env.context, previewId);
 
 // Site config (themes, languages, settings)
-const config = await configService.get(env.context, "en");
+// NOTE: Second argument is now an object, not a bare string
+const config = await configService.get(env.context, { language: "en-us" });
 // → { settings, themes, languages }
 
 // Site info
@@ -301,58 +308,46 @@ export const render = (
 
 ### Mobile (Expo) — `core/render.tsx`
 
+The mobile render system compiles **handler values** and normalizes styles before passing props to components. See `wappa-skills:mobile` for the complete implementation.
+
 ```tsx
 import React from "react";
-import { View } from "react-native";
 import { PageComponent } from "@appaflytech/wappa-client/constants/types";
+import {
+  createHandlerCompiler,
+  isHandlerValue,
+} from "@appaflytech/wappa-client/core/utils";
+import { dataBus, formBus, uiBus } from "@appaflytech/wappa-client/core/buses";
 import getComponent from "../components";
+
+// Handler values look like: { __handler: true, code: "router.push('/')" }
+// They are compiled into real functions at render time with full context
+const compileHandler = createHandlerCompiler(getMobileHandlerContext);
+
+function transformProps(props: Record<string, any>) {
+  const compiled: Record<string, any> = {};
+  for (const [k, v] of Object.entries(props ?? {})) {
+    compiled[k] = isHandlerValue(v) ? compileHandler(v) : v;
+  }
+  return compiled;
+}
 
 export const render = (
   componentList: PageComponent[],
   views: Record<string, PageComponent[]>,
-  isMappingRender: boolean = false,
 ): React.ReactNode => {
-  if (!componentList?.length) return null;
-
-  return componentList.map((component, index) => {
-    const { id, name, props, refs, children } = component;
-
-    if (name === "view") {
-      const view = views[id];
-      return view ? (
-        <View key={id || index}>{render(view, views, false)}</View>
-      ) : null;
-    }
-
-    const Component = getComponent(name);
-    if (!Component) {
-      console.warn(`Unknown component: ${name}`);
-      return children?.length ? (
-        <View key={id || index}>{render(children, views, false)}</View>
-      ) : null;
-    }
-
-    // isMappingRender = true inside array-repeater → mappedValue takes priority
-    const mappingProps = isMappingRender ? props?.mappedValue || {} : {};
-    const combinedProps = { ...refs, ...mappingProps, ...props };
-
-    return children?.length ? (
-      <Component key={id || index} {...combinedProps}>
-        {render(children, views, true)}
-      </Component>
-    ) : (
-      <Component key={id || index} {...combinedProps} />
-    );
-  });
+  // ... see mobile.md for full implementation
 };
 ```
 
 **Render rules:**
+
 - `props` = static values set in admin
 - `refs` = dynamic resolved values (query results, images, links)
 - `children` = child `PageComponent[]` → render recursively
 - `refs` spread BEFORE `props` → admin static values always win
-- `isMappingRender` = inside `array-repeater` → `props.mappedValue` overrides
+- Handler values (`{ __handler: true, code: "..." }`) are compiled to real functions
+- `normalizeStyle()` strips legacy nested style shapes from admin-ui
 
 ---
 
@@ -362,94 +357,39 @@ Maps `name` string → your React component. One registry file, two flavors.
 
 ### Web — `components/index.tsx`
 
+Use **direct imports** (not `next/dynamic`). Registry is a `Record<string, ComponentType<any>>` object. Components live in `components/ui/<name>/`.
+
 ```tsx
-import dynamic from "next/dynamic";
+import type { ComponentType } from "react";
 import { ArrayRepeater } from "@appaflytech/wappa-client/core/components";
 
 // Layout
-const Container   = dynamic(() => import("./wap/container"));
-const Row         = dynamic(() => import("./wap/row"));
-const Column      = dynamic(() => import("./wap/column"));
-const Box         = dynamic(() => import("./wap/box"));
-const Center      = dynamic(() => import("./wap/center"));
-const HStack      = dynamic(() => import("./wap/hstack"));
-const VStack      = dynamic(() => import("./wap/vstack"));
-const Grid        = dynamic(() => import("./wap/grid"));
-const Pressable   = dynamic(() => import("./wap/pressable"));
-const Section     = dynamic(() => import("./wap/section"));
-// Typography
-const Heading     = dynamic(() => import("./wap/heading"));
-const Paragraph   = dynamic(() => import("./wap/paragraph"));
-const Html        = dynamic(() => import("./wap/html"));
-const WapIcon     = dynamic(() => import("./wap/icon"));
-// Media
-const WapImage    = dynamic(() => import("./wap/image"));
-const Video       = dynamic(() => import("./wap/video"));
-const Iframe      = dynamic(() => import("./wap/iframe"));
-// Interactive
-const Button      = dynamic(() => import("./wap/button"));
-const WapLink     = dynamic(() => import("./wap/link"));
-const Fab         = dynamic(() => import("./wap/fab"));
-// Display
-const Card        = dynamic(() => import("./wap/card"));
-const CardList    = dynamic(() => import("./wap/card-list"));
-const Avatar      = dynamic(() => import("./wap/avatar"));
-const Badge       = dynamic(() => import("./wap/badge"));
-const Divider     = dynamic(() => import("./wap/divider"));
-const Table       = dynamic(() => import("./wap/table"));
-const Skeleton    = dynamic(() => import("./wap/skeleton"));
-// Feedback
-const Spinner     = dynamic(() => import("./wap/spinner"));
-const Alert       = dynamic(() => import("./wap/alert"));
-const Progress    = dynamic(() => import("./wap/progress"));
-const Toast       = dynamic(() => import("./wap/toast"));
-// Disclosure
-const Accordion   = dynamic(() => import("./wap/accordion"));
-const WapTabs     = dynamic(() => import("./wap/tabs"));
-// Overlay
-const Modal       = dynamic(() => import("./wap/modal"));
-const Drawer      = dynamic(() => import("./wap/drawer"));
-const Actionsheet = dynamic(() => import("./wap/actionsheet"));
-const Menu        = dynamic(() => import("./wap/menu"));
-const Popover     = dynamic(() => import("./wap/popover"));
-const AlertDialog = dynamic(() => import("./wap/alert-dialog"));
-const Tooltip     = dynamic(() => import("./wap/tooltip"));
-// Form
-const FormControl     = dynamic(() => import("./wap/form-control"));
-const Input           = dynamic(() => import("./wap/input"));
-const Select          = dynamic(() => import("./wap/select"));
-const WapSwitch       = dynamic(() => import("./wap/switch"));
-const Checkbox        = dynamic(() => import("./wap/checkbox"));
-const Radio           = dynamic(() => import("./wap/radio"));
-const Textarea        = dynamic(() => import("./wap/textarea"));
-const Slider          = dynamic(() => import("./wap/slider"));
-const Calendar        = dynamic(() => import("./wap/calendar"));
-const DateTimePicker  = dynamic(() => import("./wap/date-time-picker"));
+import Container from "./ui/container/Container";
+import Box from "./ui/box/Box";
+import Row from "./ui/row/Row";
+import Column from "./ui/column/Column";
+import Section from "./ui/section/Section";
+// ... all other imports
 
-export default function getComponent(name: string): any {
-  const map: Record<string, any> = {
-    container: Container, "array-repeater": ArrayRepeater, box: Box,
-    center: Center, hstack: HStack, vstack: VStack, grid: Grid,
-    pressable: Pressable, row: Row, column: Column, section: Section,
-    heading: Heading, paragraph: Paragraph, html: Html, icon: WapIcon,
-    image: WapImage, video: Video, iframe: Iframe,
-    button: Button, link: WapLink, fab: Fab,
-    card: Card, "card-list": CardList, avatar: Avatar, badge: Badge,
-    divider: Divider, table: Table, skeleton: Skeleton,
-    spinner: Spinner, alert: Alert, progress: Progress, toast: Toast,
-    accordion: Accordion, tabs: WapTabs,
-    modal: Modal, drawer: Drawer, actionsheet: Actionsheet, menu: Menu,
-    popover: Popover, "alert-dialog": AlertDialog, tooltip: Tooltip,
-    "form-control": FormControl, input: Input, select: Select,
-    switch: WapSwitch, checkbox: Checkbox, radio: Radio,
-    textarea: Textarea, slider: Slider, calendar: Calendar,
-    "date-time-picker": DateTimePicker,
-  };
-  return map[name] ?? null;
+const registry: Record<string, ComponentType<any>> = {
+  container: Container,
+  box: Box,
+  row: Row,
+  column: Column,
+  section: Section,
+  // ... all components
+  "array-repeater": ArrayRepeater,
+  "array-row": ArrayRepeater, // alias — same component
+};
+
+export default function getComponent(name: string): ComponentType<any> | null {
+  return registry[name] ?? null;
 }
 ```
 
-### Mobile — same pattern, direct imports (no `dynamic()`)
+**Important:** `array-row` is an alias for `array-repeater` — register both to the same component.
+
+### Mobile — same pattern, direct imports, 90+ components (see `wappa-skills:mobile`)
 
 ---
 
@@ -467,6 +407,7 @@ Docs: https://v4.gluestack.io/ui/docs/components/all-components
 Place generated files in `components/ui/` (web) or `components/base-ui/ui/` (mobile).
 
 **Critical gluestack-ui v4 rules:**
+
 1. **Compound components** — `<Button>` requires `<ButtonText>` inside
 2. **Semantic tokens** — use `text-foreground`, `bg-primary-500`, never raw colors
 3. **Component props first** — use `size`, `variant`, `action` before `className`
@@ -477,44 +418,60 @@ Place generated files in `components/ui/` (web) or `components/base-ui/ui/` (mob
 
 ## 9. Component Schema Contracts
 
-Load `wappa-skills:components` for complete TypeScript interfaces for all 36 components. They are derived directly from the admin panel schemas (`elements.ts` + `constants.ts`).
+Load `wappa-skills:components` for complete TypeScript interfaces for all 90+ components. They are derived directly from the admin panel schemas (`elements.ts` + `constants.ts`).
 
-All components receive `className?: string` (global prop available on every component).
+All components receive `className?: string`, `componentId?: string`, and `style?: object` as global props.
 
 Component `name` values used in the registry:
 
 ```
-Layout (isMobile: mixed):
-  container        (web only)     array-repeater   box
-  center           hstack         vstack           grid
-  pressable        row            column           section
-  view
+Layout:
+  container (web only)   array-repeater   array-row (alias)
+  box        center       hstack           vstack
+  grid       pressable    row              column
+  section    view         script/code-block
 
-Typography (web + mobile):
-  heading          paragraph      html             icon
+Typography:
+  heading    paragraph    html (web only)  icon    text
 
 Media:
-  image            video          iframe (web only)
+  image      image-background    video
+  iframe (web only)
 
 Interactive:
-  button           link           fab
+  button     link         fab
 
 Display:
-  card             card-list      avatar           badge
-  divider          table          skeleton
+  card       card-list    avatar           badge
+  divider    table        skeleton
 
 Feedback:
-  spinner          alert          progress         toast
+  spinner    alert        progress         toast
 
 Disclosure:
-  accordion        tabs
+  accordion  accordion-item   tabs         tab-panel
 
 Overlay:
-  modal            drawer         actionsheet      menu
-  popover          alert-dialog   tooltip
+  modal      drawer       actionsheet      menu
+  popover    alert-dialog tooltip          portal
 
 Form:
-  form-control     input          select           switch
-  checkbox         radio          textarea         slider
-  calendar         date-time-picker
+  form-control  input      select          switch
+  checkbox       radio      textarea        slider
+  calendar       date-time-picker    date-picker
+  otp-input      image-picker        file-picker
+  phone-input    color-picker
+
+Mobile-native only:
+  mobile-view / view-native        safe-area-view
+  keyboard-avoiding-view           scroll-view
+  flat-list      section-list      virtualized-list
+  refresh-control                  carousel
+  bottomsheet (+ sub-components)
+  tab-view       webview           lottie
+  map-view       map-marker
+  bar-chart      line-chart        pie-chart
+  camera / barcode-scanner
+  progress-ring  image-cropper     context-menu
+  error-boundary
 ```
