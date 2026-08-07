@@ -29,7 +29,7 @@ npx skills add appaflytech/skills -a cursor
 
 Complete guide for building **Next.js** (web) or **Expo React Native** (mobile) projects with Wappa CMS.
 
-All components use **gluestack-ui v4** for styling on both platforms.
+The component **props contract is framework-agnostic** — it is derived from the admin page-builder schema (`elements.ts` / `constants.ts`); you implement it with any UI library. Reference stacks: **wappa-web** uses plain **Tailwind CSS v3** (hand-written classes, Next.js 15 / React 19); **wappa-mobile** uses **gluestack-ui v3 primitives + NativeWind v4** (Expo SDK 57 / RN 0.86). *(Not gluestack-ui v4.)*
 
 **Use when:**
 
@@ -43,11 +43,11 @@ All components use **gluestack-ui v4** for styling on both platforms.
 
 | Sub-Skill                 | File                             | Coverage                                                           |
 | ------------------------- | -------------------------------- | ------------------------------------------------------------------ |
-| `wappa-skills`            | [SKILL.md](./SKILL.md)           | Main overview, mandatory rules, component table                    |
-| `wappa-skills:components` | [components.md](./components.md) | Props interfaces + gluestack implementations for all 27 components |
-| `wappa-skills:web`        | [web.md](./web.md)               | Next.js setup, GluestackUIProvider, routing, component registry    |
-| `wappa-skills:mobile`     | [mobile.md](./mobile.md)         | Expo setup, WapScreen, contextService, Zustand store, registry     |
-| `wappa-skills:theme`      | [theme.md](./theme.md)           | Wappa theme system + gluestack-ui v4 theming for web and mobile    |
+| `wappa-skills`            | [SKILL.md](./SKILL.md)           | Main overview, mandatory rules, component groups + full 127-name catalog |
+| `wappa-skills:components` | [components.md](./components.md) | Props interfaces for all **127 components** (10 groups, from admin schema) |
+| `wappa-skills:web`        | [web.md](./web.md)               | Next.js 15 setup, App Router, plain-Tailwind registry (wappa-web reference) |
+| `wappa-skills:mobile`     | [mobile.md](./mobile.md)         | Expo SDK 57 setup, app + shared `@appaflytech/wappa-mobile-ui` package, WapScreen, Zustand store, registry |
+| `wappa-skills:theme`      | [theme.md](./theme.md)           | Wappa theme system (web CSS vars + mobile ThemeProvider) for web and mobile |
 
 ## Usage
 
@@ -71,9 +71,9 @@ Load wappa-skills:mobile and set up the WapScreen for Expo
 
 ## Prerequisites
 
-- `@appaflytech/wappa-client` SDK
-- **Web:** Next.js 14+ (App Router), `@gluestack-ui/nativewind-utils`
-- **Mobile:** Expo SDK 51+, `@gluestack-ui/nativewind-utils`, NativeWind v4
+- `@appaflytech/wappa-client` SDK (v0.0.11+)
+- **Web:** Next.js 15 (App Router), React 19, Tailwind CSS v3 (reference uses plain Tailwind)
+- **Mobile:** Expo SDK 57, React Native 0.86, `@appaflytech/wappa-mobile-ui`, gluestack-ui v3, NativeWind v4, Zustand v5, expo-router
 
 ## Supported Agents
 

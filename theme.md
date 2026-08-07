@@ -1,21 +1,34 @@
 ---
 name: wappa-skills:theme
-description: Wappa CMS theme system integrated with gluestack-ui v4. Web uses CSS variables auto-injected by admin. Mobile uses ThemeProvider to map wappa mobileNeutrals to gluestack config.
+description: Wappa CMS theme system. Themes come from configService.get() and carry both web tokens (colors/neutrals/fontSizes) and mobile tokens (mobileColors/mobileNeutrals/mobileFontSizes). Web reference = plain Tailwind + CSS variables; mobile reference = gluestack-ui v3 primitives + NativeWind v4 + a ThemeProvider that maps the mobile tokens.
 ---
 
-# Wappa Theme System — gluestack-ui v4
+# Wappa Theme System
+
+> **Reference stacks:** web (`wappa-web`) themes with **plain Tailwind + CSS variables** (no gluestack); mobile (`wappa-mobile`) themes with **gluestack-ui v3 primitives + NativeWind v4** plus a `ThemeProvider` that reads the theme's `mobile*` tokens. The gluestack-specific sections below apply only if you chose gluestack.
 
 ---
 
 ## Wappa Theme Object
 
-Themes are configured in the Wappa admin and delivered via `configService.get()`:
+Themes are configured in the Wappa admin and delivered via `configService.get(env, { language })` (as `config.themes`). Each `Theme` carries **both** web and mobile token sets:
 
 ```ts
 type WappaTheme = {
   id: string;
   name: string;
-  // Mobile: color tokens
+  isDefault?: boolean;
+  // Web token sets
+  colors?: Record<string, string>;
+  neutrals?: Record<string, string>;
+  fontSizes?: Record<string, number>;
+  // Mobile token sets (mirror of the web ones)
+  mobileColors?: Record<string, string>;
+  mobileFontSizes: {
+    xs?: number; sm?: number; md?: number; lg?: number; xl?: number; "2xl"?: number;
+    [key: string]: number | undefined;
+  };
+  // Mobile: neutral/semantic color tokens
   mobileNeutrals: {
     primary?: string; // e.g. '#3b82f6'
     secondary?: string;
@@ -46,12 +59,11 @@ type WappaTheme = {
 
 ---
 
-## Web — CSS Variables
+## Web — CSS Variables (plain Tailwind reference)
 
-On web, the Wappa admin injects CSS variables into `:root` automatically.
-gluestack-ui v4 maps to these via Tailwind's CSS variable extension.
+The `wappa-web` reference themes purely with **CSS variables + Tailwind** — no gluestack, no token engine. The theme colors are exposed as `--color-*` variables and your hand-written component classes read them (e.g. `style={{ background: "var(--color-primary)" }}` or a Tailwind color mapped to the var). Resolve the active theme from `config.themes` and set the vars on `:root` (or a wrapper) yourself.
 
-### Standard CSS Variables (auto-injected)
+### Standard CSS Variables
 
 ```css
 :root {
@@ -68,17 +80,16 @@ gluestack-ui v4 maps to these via Tailwind's CSS variable extension.
 }
 ```
 
-### Connecting to gluestack-ui Tokens (tailwind.config.js)
+### Mapping CSS vars to Tailwind utilities (web, plain Tailwind)
 
 ```js
-// tailwind.config.js
+// tailwind.config.js — stock Tailwind v3 in the web reference (no gluestack preset)
 module.exports = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
-  presets: [require("@gluestack-ui/nativewind-utils/tailwind")],
   theme: {
     extend: {
       colors: {
-        // Map wappa CSS vars to custom utilities if needed
+        // Expose the injected CSS vars as Tailwind color utilities
         "wappa-primary": "var(--color-primary)",
         "wappa-background": "var(--color-background)",
       },
@@ -87,9 +98,9 @@ module.exports = {
 };
 ```
 
-### gluestack-ui v4 Semantic Token Reference
+### gluestack Semantic Token Reference (mobile / if you use gluestack)
 
-**Always use these — never raw hex values:**
+Only relevant if you implement components with **gluestack-ui v3 + NativeWind** (the mobile reference). With plain Tailwind you use your own utilities instead. **Prefer semantic classes over raw hex:**
 
 | className Token       | Maps to                       |
 | --------------------- | ----------------------------- |
@@ -173,88 +184,48 @@ function ThemedBanner() {
 
 ---
 
-## Mobile — Gluestack Config Override (Optional)
+## Mobile — driving gluestack/NativeWind colors from the theme
 
-If you need wappa theme colors to affect gluestack's built-in semantic tokens
-(so `bg-primary-500` reflects the wappa primary), override the config:
+> **Do NOT use the legacy `@gluestack-ui/config` + `<GluestackUIProvider config={...}>` token-override API.** That is gluestack v2/v3-legacy `config`; the mobile reference styles with **gluestack v3 primitives + NativeWind v4 (className)**, so theme colors flow through **CSS variables / NativeWind**, not a `tokens` object.
 
-```tsx
-// components/ThemeProvider.tsx — extended version
-import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
-import { config } from "@gluestack-ui/config"; // base config
+To make NativeWind semantic classes (`bg-primary-500`, `bg-background-0`, …) reflect the admin theme, write the theme's `mobileNeutrals`/`mobileColors` into the NativeWind CSS variables that `tailwind.config.js` maps those classes to — e.g. via `vars()` from `nativewind` on a wrapper `View`, or by setting the variables in `global.css` and swapping values per active theme. Then components keep using plain `className` and adapt automatically.
 
-export function ThemeProvider({
-  theme,
-  children,
-}: {
-  theme?: any;
-  children: React.ReactNode;
-}) {
-  const overriddenConfig = theme?.mobileNeutrals
-    ? {
-        ...config,
-        tokens: {
-          ...config.tokens,
-          colors: {
-            ...config.tokens.colors,
-            // Map wappa primary → gluestack primary500
-            primary400:
-              theme.mobileNeutrals.primary || config.tokens.colors.primary400,
-            primary500:
-              theme.mobileNeutrals.primary || config.tokens.colors.primary500,
-            backgroundLight0:
-              theme.mobileNeutrals.background ||
-              config.tokens.colors.backgroundLight0,
-            backgroundDark950:
-              theme.mobileNeutrals.background ||
-              config.tokens.colors.backgroundDark950,
-          },
-        },
-      }
-    : config;
-
-  return (
-    // Re-provide with overridden config to affect all gluestack tokens
-    <GluestackUIProvider config={overriddenConfig}>
-      {children}
-    </GluestackUIProvider>
-  );
-}
-```
-
-> **Note:** This re-renders all gluestack tokens with the theme colors. Use sparingly — only when the admin theme must directly control gluestack's primary/background colors.
+For components that need a raw value (inline `style`, chart colors), read it from the `ThemeProvider` above (`getColor("primary")` / `getFontSize("md")`).
 
 ---
 
 ## Dark Mode
 
-### Web
+### Web (plain Tailwind)
+
+Add `next-themes`, switch a `class`/`data-theme` on `<html>`, and define light/dark values for the `--color-*` variables. Tailwind `dark:` utilities and the CSS vars then adapt automatically:
 
 ```tsx
 // app/layout.tsx
 import { ThemeProvider } from "next-themes";
 
 <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-  <GluestackUIProvider mode={resolvedTheme === "dark" ? "dark" : "light"}>
-    {children}
-  </GluestackUIProvider>
+  {children}
 </ThemeProvider>;
 ```
 
-### Mobile
+### Mobile (gluestack v3 + NativeWind)
+
+NativeWind dark mode is `class`-based. Follow the device scheme (or the admin theme) and toggle it; semantic `className`s adapt:
 
 ```tsx
 // app/_layout.tsx
 import { useColorScheme } from "react-native";
+import { colorScheme } from "nativewind";
 
-const colorScheme = useColorScheme();
-<GluestackUIProvider mode={colorScheme === "dark" ? "dark" : "light"}>
+const scheme = useColorScheme();
+colorScheme.set(scheme ?? "light"); // drives NativeWind dark: variants
 ```
 
-In components, semantic tokens adapt automatically:
+In components, semantic classes adapt automatically:
 
 ```tsx
-// Automatically adapts: white in light, dark bg in dark mode
+// white in light, dark bg in dark mode
 <Box className="bg-background-0">
 <Text className="text-foreground">
 ```

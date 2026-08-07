@@ -1,492 +1,291 @@
 ---
 name: wappa-skills:mobile
-description: Expo React Native setup for Wappa Schema mobile projects. Framework-agnostic — use any UI library. gluestack-ui v4 is the default. Covers project structure, GluestackUIProvider (optional), WapScreen, contextService, and the full component registry.
+description: Expo React Native setup for Wappa Schema mobile projects. The reference (wappa-mobile) uses Expo SDK 57 + RN 0.86 + React 19, gluestack-ui v3 primitives + NativeWind v4, expo-router, Zustand v5, and a shared source-only engine package @appaflytech/wappa-mobile-ui (registry + render + navigation). Covers the two-package model, the injection seams (setWappaStore / useWappaConfig / registerComponents), WapScreen, contextService, and the handler-compiling render.
 ---
 
 # Wappa Schema — Mobile (Expo React Native)
 
-> **UI Framework:** This guide shows gluestack-ui v4 as the default. You can swap it for NativeWind only, React Native Paper, or any other library. See `wappa-skills:components` for framework-agnostic component contracts.
+> **Reference stack:** `wappa-mobile` ships **Expo SDK 57 · RN 0.86 · React 19**, UI = **gluestack-ui v3 primitives + NativeWind v4** (NOT gluestack v4), navigation = **expo-router** (file-based) wrapped by a Wappa-driven `DynamicNavigation`, state = **Zustand v5**, icons = `lucide-react-native`. The props contract in `wappa-skills:components` is framework-agnostic; this guide documents what the reference actually does.
+
+---
+
+## 0. Two-package architecture (important)
+
+The reference mobile is split into **two packages**:
+
+| Package | Role |
+| ------- | ---- |
+| **`wappa-mobile/`** (the app) | Routes (`app/*`), the **app-owned** pieces — `WapScreen`, `services/contextService.ts`, `store/store.ts`, custom components — plus native `ios/`+`android/`, `.env`, EAS/Docker. Depends on `@appaflytech/wappa-mobile-ui`. |
+| **`@appaflytech/wappa-mobile-ui`** (shared, source-only) | The **engine**: component registry, `render()`, wrappers, smart overlays, `DynamicNavigation`, the `useWappaConfig` store, and `setWappaStore`. `main`/`source`/`react-native` all point at raw `index.tsx` — **no build step**; Metro compiles it in-app. |
+
+Three **injection seams** connect them (the engine holds no app singletons):
+
+- **`setWappaStore(useAppStore)`** — the app hands its Zustand store to the engine (called once at module load in `store/store.ts`).
+- **`useWappaConfig`** — a Zustand config store (`cdn` / `api` / `key` / `env`) the app populates from `EXPO_PUBLIC_*`; media components read `cdn`, services read all four.
+- **`registerComponents({...})`** — the app extends/overrides the registry (e.g. `components/custom/index.ts`, which **wappa-mcp auto-generates** via `create_custom_component`).
+
+Metro remaps the package to the sibling **source** dir for live edits (`resolver.extraNodeModules` + a `watchFolders` entry), falling back to the published `node_modules` copy in CI/Docker. `tailwind.config.js` also globs `../wappa-mobile-ui/**` so its classes are scanned.
+
+> **Building a new app?** The fastest correct path is to **depend on `@appaflytech/wappa-mobile-ui`** and only author the app-owned pieces below. Re-implementing the engine by hand is possible but not recommended.
 
 ---
 
 ## 1. Setup
 
-### Install Dependencies
-
 ```bash
-# Create Expo project
-npx create-expo-app@latest my-wappa-mobile --template expo-template-blank-typescript
+# Create Expo project (expo-router template)
+npx create-expo-app@latest my-wappa-mobile
 cd my-wappa-mobile
 
-# Install Wappa SDK
-npm install @appaflytech/wappa-client
+# Wappa SDK (logic) + the shared UI/engine package
+npm install @appaflytech/wappa-client @appaflytech/wappa-mobile-ui
 
-# Install Zustand
+# State + storage
 npm install zustand @react-native-async-storage/async-storage
 
-# Install gluestack-ui v4 (default — skip if using a different UI framework)
-npx gluestack-ui@latest init -y
-npx gluestack-ui@latest add --all -y
+# UI: gluestack-ui v3 primitives + NativeWind v4
+npm install @gluestack-ui/core @gluestack-ui/utils nativewind
+npm install -D tailwindcss
 
-# Install NativeWind (if not included by gluestack init)
-npm install nativewind tailwindcss
+# Icons + common native deps used by the registry
+npm install lucide-react-native @expo/vector-icons \
+  react-native-reanimated react-native-gesture-handler \
+  @gorhom/bottom-sheet react-native-safe-area-context
 ```
 
-> **Using a different UI framework?** Skip the gluestack-ui steps above.
-> Install your preferred library (NativeWind only, React Native Paper, etc.) and implement
-> components using the contracts defined in `wappa-skills:components`.
-
-````
+Wire NativeWind: `global.css` with the three `@tailwind` directives, `metro.config.js` `withNativeWind({ input: "./global.css" })`, and the `nativewind/babel` preset in `babel.config.js`. Dark mode = `class`.
 
 ### `.env`
 
 ```env
-EXPO_PUBLIC_WAP_API=https://api.your-service.com
-EXPO_PUBLIC_WAP_CDN=https://cdn.your-service.com
+EXPO_PUBLIC_WAP_API=https://wappa-ui-api.appaflytech.com
+EXPO_PUBLIC_WAP_CDN=https://minio.appaflytech.com/wappa-storage
 EXPO_PUBLIC_WAP_SITE_KEY=your-site-key
 EXPO_PUBLIC_ENV=development
-````
+```
+
+These are consumed by `useWappaConfig` (from `@appaflytech/wappa-mobile-ui`): `api` → `service = ${api}/${key}`, `cdn` → asset base, `key` → tenant/site key, `env` → environment label.
 
 ---
 
-## 2. File Structure
+## 2. File Structure (app-owned)
 
 ```
 my-wappa-mobile/
 ├── app/
-│   ├── _layout.tsx             # GluestackUIProvider + config init
-│   └── index.tsx               # Home screen
+│   ├── _layout.tsx                # providers + DynamicNavigation(settings.navigation) around <Stack>
+│   ├── index.tsx                  # <WapScreen fixedPath="/" />
+│   ├── [...pathname].tsx          # catch-all → <WapScreen fixedPath={joined} />
+│   └── (auth)/login.tsx
 ├── components/
-│   ├── index.tsx               # Registry (NO WapScreen — circular dep risk)
-│   ├── WapScreen.tsx           # Import DIRECTLY only, not via registry
-│   ├── ThemeProvider.tsx       # Wappa theme → gluestack theming
-│   ├── ui/                     # gluestack-ui v4 (generated by CLI)
-│   └── wap/
-│       ├── container/Container.tsx
-│       ├── row/Row.tsx
-│       ├── column/Column.tsx
-│       ├── section/Section.tsx
-│       ├── heading/Heading.tsx
-│       ├── paragraph/Paragraph.tsx
-│       ├── html/Html.tsx
-│       ├── image/Image.tsx
-│       ├── video/Video.tsx
-│       ├── button/Button.tsx
-│       ├── link/Link.tsx
-│       ├── card/Card.tsx
-│       ├── card-list/CardList.tsx
-│       ├── avatar/Avatar.tsx
-│       ├── badge/Badge.tsx
-│       ├── divider/Divider.tsx
-│       ├── spinner/Spinner.tsx
-│       ├── alert/Alert.tsx
-│       ├── input/Input.tsx
-│       ├── select/Select.tsx
-│       ├── progress/Progress.tsx
-│       ├── switch/Switch.tsx
-│       ├── checkbox/Checkbox.tsx
-│       ├── radio/Radio.tsx
-│       ├── textarea/Textarea.tsx
-│       └── slider/Slider.tsx
-├── core/
-│   └── render.tsx
+│   ├── WapScreen.tsx              # page loader + render (app-owned)
+│   └── custom/index.ts            # registerComponents({...}) — wappa-mcp generated
 ├── services/
-│   └── contextService.ts
+│   └── contextService.ts          # Environment + fetchConfig/fetchPage
 ├── store/
-│   └── store.ts
-└── utils/
-    └── path.ts
+│   └── store.ts                   # Zustand useAppStore + setWappaStore(useAppStore)
+├── global.css · metro.config.js · babel.config.js · tailwind.config.js · app.json · .env
 ```
+
+The registry, `render()`, navigation and UI components live in **`@appaflytech/wappa-mobile-ui`**, not in the app.
 
 ---
 
-## 3. Core Infrastructure
+## 3. App-owned infrastructure
 
-### `utils/path.ts`
-
-```ts
-export const getCDNImage = (image: string): string =>
-  `${process.env.EXPO_PUBLIC_WAP_CDN}/${image}`;
-
-export const safeText = (value: any): string => {
-  if (value === null || value === undefined) return "";
-  if (typeof value === "string") return value;
-  if (typeof value === "number") return String(value);
-  return "";
-};
-```
-
-### `store/store.ts`
+### `store/store.ts` — Zustand + engine binding
 
 ```ts
 import { create } from "zustand";
-import { PageComponent } from "@appaflytech/wappa-client/constants/types";
-
-type WapPage = {
-  id: string | number;
-  title: string;
-  path: string;
-  layout: PageComponent[];
-  views: Record<string, PageComponent[]>;
-  theme?: string;
-};
+import { setWappaStore } from "@appaflytech/wappa-mobile-ui";
+import type { PageComponent } from "@appaflytech/wappa-client/constants/types";
 
 interface AppStore {
-  page?: WapPage;
   isLoading: boolean;
-  error?: Error;
-  theme?: any;
-  themes?: any[];
-  settings?: any;
-  languages?: any[];
-  setPage: (page: WapPage) => void;
+  isInitialized: boolean;
+  isConfigLoaded: boolean;
+  page?: { id: number; title: string; path: string; theme?: string;
+           layout: PageComponent[]; views: Record<string, PageComponent[]> };
+  settings?: any; themes?: any[]; theme?: any;
+  language?: string; languages?: any[]; environment?: any;
+  authProviders?: { googleEnabled: boolean; appleEnabled: boolean; googleWebClientId?: string };
+  wapNavigate: ((path: string) => void) | null;
+
+  setWapNavigate: (fn: ((path: string) => void) | null) => void;
+  setPage: (page: AppStore["page"]) => void;
   setLoading: (v: boolean) => void;
-  setError: (e: Error | undefined) => void;
-  setTheme: (t: any) => void;
-  setThemes: (t: any[]) => void;
-  setSettings: (s: any) => void;
-  setLanguages: (l: any[]) => void;
+  setConfig: (c: Partial<AppStore>) => void;   // also flips isConfigLoaded
+  initialize: (c: { page: AppStore["page"] }) => void; // sets page + isInitialized
+  reset: () => void;
 }
 
 export const useAppStore = create<AppStore>((set) => ({
-  isLoading: false,
+  isLoading: false, isInitialized: false, isConfigLoaded: false, wapNavigate: null,
+  setWapNavigate: (wapNavigate) => set({ wapNavigate }),
   setPage: (page) => set({ page }),
   setLoading: (isLoading) => set({ isLoading }),
-  setError: (error) => set({ error }),
-  setTheme: (theme) => set({ theme }),
-  setThemes: (themes) => set({ themes }),
-  setSettings: (settings) => set({ settings }),
-  setLanguages: (languages) => set({ languages }),
+  setConfig: (c) => set({ ...c, isConfigLoaded: true }),
+  initialize: ({ page }) => set({ page, isLoading: false, isInitialized: true }),
+  reset: () => set({ page: undefined, isInitialized: false }),
 }));
+
+// Hand the store to the render engine (handlers use store.get/set, wapNavigate, etc.)
+setWappaStore(useAppStore);
 ```
 
-### `services/contextService.ts`
+### `services/contextService.ts` — data fetching
 
 ```ts
 import { Environment } from "@appaflytech/wappa-client/core/classes";
 import { pageService, configService } from "@appaflytech/wappa-client/services";
-import { useAppStore } from "../store/store";
+import { useWappaConfig } from "@appaflytech/wappa-mobile-ui";
 
-export const environment = new Environment();
-environment.update({
-  cdn: process.env.EXPO_PUBLIC_WAP_CDN || "",
-  key: process.env.EXPO_PUBLIC_WAP_SITE_KEY || "",
-  service: `${process.env.EXPO_PUBLIC_WAP_API}/${process.env.EXPO_PUBLIC_WAP_SITE_KEY}`,
-  url: "",
-  environment: (process.env.EXPO_PUBLIC_ENV as any) || "development",
-});
+const DEFAULT_LANGUAGE = "en-us";
 
-export async function loadSiteConfig(language = "en") {
-  const store = useAppStore.getState();
-  try {
-    store.setLoading(true);
-    const config = await configService.get(environment.context, language);
-    store.setSettings(config.settings);
-    store.setThemes(config.themes || []);
-    store.setLanguages(config.languages || []);
-    if (config.themes?.length) store.setTheme(config.themes[0]);
-  } catch (err: any) {
-    store.setError(err);
-  } finally {
-    store.setLoading(false);
-  }
+function makeEnv() {
+  const { cdn, api, key, env } = useWappaConfig.getState();
+  const environment = new Environment();
+  environment.update({ cdn, key, service: `${api}/${key}`, url: "", environment: env });
+  return environment;
 }
 
-export async function loadPage(path: string) {
-  const store = useAppStore.getState();
-  try {
-    store.setLoading(true);
-    store.setError(undefined);
-    const page = await pageService.get(environment.context, {
-      path,
-      isMobile: true,
-    });
-    if (!page) {
-      store.setError(new Error("Page not found"));
-      return;
-    }
-    store.setPage({
-      id: page.id,
-      title: page.title,
-      path: page.path,
-      layout: page.layout,
-      views: page.views,
-      theme: page.theme,
-    });
-  } catch (err: any) {
-    store.setError(err);
-  } finally {
-    store.setLoading(false);
-  }
-}
-```
-
-### `core/render.tsx`
-
-```tsx
-import React from "react";
-import { Box } from "@/components/ui/box";
-import { PageComponent } from "@appaflytech/wappa-client/constants/types";
-import getComponent from "../components";
-
-export const render = (
-  componentList: PageComponent[],
-  views: Record<string, PageComponent[]>,
-  isMappingRender: boolean = false,
-): React.ReactNode => {
-  if (!componentList?.length) return null;
-
-  return componentList.map((component, index) => {
-    const { id, name, props, refs, children } = component;
-
-    if (name === "view") {
-      const view = views[id];
-      return view ? (
-        <Box key={id || index}>{render(view, views, false)}</Box>
-      ) : null;
-    }
-
-    const Component = getComponent(name);
-    if (!Component) {
-      console.warn(`[Wappa] Unknown component: ${name}`);
-      return null;
-    }
-
-    const mappingProps = isMappingRender ? props?.mappedValue || {} : {};
-    const combinedProps = { ...refs, ...mappingProps, ...props };
-
-    return children?.length ? (
-      <Component key={id || index} {...combinedProps}>
-        {render(children, views, true)}
-      </Component>
-    ) : (
-      <Component key={id || index} {...combinedProps} />
-    );
-  });
+const buildPath = (p: string) => {
+  const clean = (p ?? "/").replace(/^\/+/, "");
+  return clean.startsWith(DEFAULT_LANGUAGE) ? clean : `${DEFAULT_LANGUAGE}/${clean}`;
 };
-```
 
----
+export const contextService = {
+  async fetchConfig() {
+    const env = makeEnv();
+    if (!env.context.key) return null; // site key not set yet (e.g. QR not scanned)
+    // NOTE: configService.get takes an OBJECT { language } — NOT a bare string.
+    return configService.get(env.context, { language: DEFAULT_LANGUAGE });
+    // → { settings, themes, language, languages, authProviders, environment }
+  },
+  async fetchPage(pathname: string) {
+    const env = makeEnv();
+    return pageService.get(env.context, { path: buildPath(pathname), isMobile: true });
+  },
+};
 
-## 4. Component Registry — `components/index.tsx`
-
-> ⚠️ Do NOT import `WapScreen` here — causes circular dependency.
-
-```tsx
-import React from "react";
-import { ArrayRepeater } from "@appaflytech/wappa-client/core/components";
-
-import Container from "./wap/container/Container";
-import Row from "./wap/row/Row";
-import Column from "./wap/column/Column";
-import Section from "./wap/section/Section";
-import Heading from "./wap/heading/Heading";
-import Paragraph from "./wap/paragraph/Paragraph";
-import Html from "./wap/html/Html";
-import WapImage from "./wap/image/Image";
-import Video from "./wap/video/Video";
-import Button from "./wap/button/Button";
-import WapLink from "./wap/link/Link";
-import Card from "./wap/card/Card";
-import CardList from "./wap/card-list/CardList";
-import Avatar from "./wap/avatar/Avatar";
-import Badge from "./wap/badge/Badge";
-import Divider from "./wap/divider/Divider";
-import Spinner from "./wap/spinner/Spinner";
-import Alert from "./wap/alert/Alert";
-import Input from "./wap/input/Input";
-import Select from "./wap/select/Select";
-import Progress from "./wap/progress/Progress";
-import WapSwitch from "./wap/switch/Switch";
-import Checkbox from "./wap/checkbox/Checkbox";
-import Radio from "./wap/radio/Radio";
-import Textarea from "./wap/textarea/Textarea";
-import Slider from "./wap/slider/Slider";
-
-export default function getComponent(
-  name: string,
-): React.ComponentType<any> | null {
-  switch (name) {
-    case "container":
-      return Container;
-    case "row":
-      return Row;
-    case "column":
-      return Column;
-    case "section":
-      return Section;
-    case "heading":
-      return Heading;
-    case "paragraph":
-      return Paragraph;
-    case "html":
-      return Html;
-    case "image":
-      return WapImage;
-    case "video":
-      return Video;
-    case "button":
-      return Button;
-    case "link":
-      return WapLink;
-    case "card":
-      return Card;
-    case "card-list":
-      return CardList;
-    case "avatar":
-      return Avatar;
-    case "badge":
-      return Badge;
-    case "divider":
-      return Divider;
-    case "spinner":
-      return Spinner;
-    case "alert":
-      return Alert;
-    case "input":
-      return Input;
-    case "select":
-      return Select;
-    case "progress":
-      return Progress;
-    case "switch":
-      return WapSwitch;
-    case "checkbox":
-      return Checkbox;
-    case "radio":
-      return Radio;
-    case "textarea":
-      return Textarea;
-    case "slider":
-      return Slider;
-    case "array-repeater":
-      return ArrayRepeater as any;
-    default:
-      return null;
-  }
+// Multi-tenant factory: same two methods, key/service from an explicit siteKey.
+export function createContextService(siteKey: string, overrides?: { api?: string; cdn?: string }) {
+  /* build an Environment from siteKey + overrides, return { fetchConfig, fetchPage } */
 }
 ```
 
+### `render()` lives in the engine — how it works
+
+You import `render` from `@appaflytech/wappa-mobile-ui`; you do **not** write it. Unlike the web render, the **mobile render compiles handler values** and normalizes styles:
+
+- **Handlers:** any prop whose value `isHandlerValue(v)` (shape `{ __handler: true, code: "..." }`) is compiled via `createHandlerCompiler(getMobileHandlerContext)` (from `@appaflytech/wappa-client/core/utils`). The injected RN context exposes: `router` (prefers `store.wapNavigate` for in-app nav), `form` (formBus), `api`, `store` (`getWappaStore().getState/setState`), `alert`, `storage` (AsyncStorage/JSON), `clipboard`, `link` (open/call/mail/sms/maps), `device`, `validate`, `data` (dataBus), `ui` (uiBus open/close/toggle), `share`, `haptics`, `permissions`, `notifications`.
+- **`view` slots:** children come from `views[id]` (with a single-slot fallback if the slot id changed after a layout edit).
+- **Style:** `normalizeStyle` drops the legacy admin nested style shape; mobile relies on NativeWind `className`.
+- **Props order:** `{ ...refs, ...mappingProps, ...compiledProps, ...listProps }` — refs first, admin/compiled values win.
+- **Lists** (`flat-list`, `section-list`, `virtualized-list`, `carousel`) receive a `_renderTemplate` callback that recurses through the same pipeline.
+
+Signature: `render(componentList, views, isMappingRender = false)`.
+
 ---
 
-## 5. WapScreen — `components/WapScreen.tsx`
+## 4. Component Registry (in the engine package)
 
-> Import directly: `import WapScreen from "@/components/WapScreen"` — **never** add to registry.
+The registry is a **`Record<string, ComponentType>`** in `@appaflytech/wappa-mobile-ui/components/index.tsx` (**~130 keys → ~90 modules**, 84 `components/ui/*` dirs). API: `getComponent(name)` (returns `null` if missing), `registerComponents(custom)` (Object.assign, later wins), `getRegistry()`. `array-repeater` is imported from `@appaflytech/wappa-client/core/components`.
+
+Notable aliases the engine registers: `array-row` → ArrayRepeater; `view` → View; `text-input` → WapInput; `tab-view` → WapTabs; and the web-only wrappers `container`/`column`/`section`/`html`/`iframe` → Box (so web-authored pages still render on mobile).
+
+**Extend the registry from the app** (do not edit the package):
+
+```ts
+// components/custom/index.ts  — wappa-mcp generates this; imported for side-effect in _layout.tsx
+import { registerComponents } from "@appaflytech/wappa-mobile-ui";
+import MyWidget from "./MyWidget";
+
+registerComponents({ "my-widget": MyWidget });
+```
+
+---
+
+## 5. WapScreen — `components/WapScreen.tsx` (app-owned)
 
 ```tsx
-import React, { useEffect } from "react";
-import { ScrollView } from "react-native";
-import { Box } from "@/components/ui/box";
-import { Spinner } from "@/components/ui/spinner";
-import { Text } from "@/components/ui/text";
+import React, { useEffect, useMemo } from "react";
+import { ActivityIndicator, Text, View } from "react-native";
+import { render } from "@appaflytech/wappa-mobile-ui";
 import { useAppStore } from "../store/store";
-import { render } from "../core/render";
-import { ThemeProvider } from "./ThemeProvider";
-import { loadPage } from "../services/contextService";
+import { contextService } from "../services/contextService";
 
-interface WapScreenProps {
-  path: string;
-  scrollable?: boolean;
-  renderHeader?: () => React.ReactNode;
-  renderFooter?: () => React.ReactNode;
-}
+interface WapScreenProps { siteKey?: string; stripPrefix?: string; fixedPath?: string }
 
-export default function WapScreen({
-  path,
-  scrollable = true,
-  renderHeader,
-  renderFooter,
-}: WapScreenProps) {
-  const { page, isLoading, error, themes } = useAppStore();
+export default function WapScreen({ fixedPath }: WapScreenProps) {
+  const pathname = fixedPath ?? "/";
+  const { page, isLoading, isInitialized, isConfigLoaded, settings, setConfig, initialize } = useAppStore();
 
+  // fetch config once
   useEffect(() => {
-    loadPage(path);
-  }, [path]);
+    if (isConfigLoaded) return;
+    contextService.fetchConfig().then((c) => c && setConfig(c));
+  }, [isConfigLoaded]);
 
-  if (isLoading) {
-    return (
-      <Box className="flex-1 items-center justify-center">
-        <Spinner size="large" />
-      </Box>
-    );
-  }
+  // fetch the page when the path changes
+  useEffect(() => {
+    if (pathname === "/") return;
+    contextService.fetchPage(pathname).then((page) => page && initialize({ page }));
+  }, [pathname]);
 
-  if (error || !page) {
-    return (
-      <Box className="flex-1 items-center justify-center">
-        <Text>Page not found</Text>
-      </Box>
-    );
-  }
-
-  const theme = themes?.find((t) => t.id === page.theme) || themes?.[0];
-
-  const content = (
-    <ThemeProvider theme={theme}>
-      {renderHeader?.()}
-      {render(page.layout, page.views)}
-      {renderFooter?.()}
-    </ThemeProvider>
-  );
-
-  return scrollable ? (
-    <ScrollView>{content}</ScrollView>
-  ) : (
-    <Box className="flex-1">{content}</Box>
-  );
+  if (!isInitialized || isLoading) return <ActivityIndicator />;
+  if (!page) return <View style={{ flex: 1 }}><Text>Page not found</Text></View>;
+  return <>{render(page.layout ?? [], page.views ?? {})}</>;
 }
 ```
 
+Routes pass the path explicitly (`fixedPath`) so backgrounded stack screens don't react to other routes: `app/index.tsx` → `<WapScreen fixedPath="/" />`; `app/[...pathname].tsx` joins the segments.
+
 ---
 
-## 6. App Entry — `app/_layout.tsx`
+## 6. App entry — `app/_layout.tsx`
+
+The root layout mounts the provider stack and wraps expo-router's `<Stack>` in the Wappa-driven `DynamicNavigation` (stack/tab/drawer, driven by `settings.navigation`). It also imports `@/components/custom` for side-effect registration.
 
 ```tsx
-import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
-import { useEffect } from "react";
-import { loadSiteConfig } from "../services/contextService";
+import "@/global.css";
+import "@/components/custom";            // side-effect: registerComponents(...)
 import { Stack } from "expo-router";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { DynamicNavigation } from "@appaflytech/wappa-mobile-ui";
+import { useAppStore } from "@/store/store";
 
 export default function RootLayout() {
-  useEffect(() => {
-    loadSiteConfig();
-  }, []);
-
+  const settings = useAppStore((s) => s.settings);
   return (
-    <GluestackUIProvider mode="light">
-      <Stack screenOptions={{ headerShown: false }} />
-    </GluestackUIProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <BottomSheetModalProvider>
+          <DynamicNavigation navigation={settings?.navigation}>
+            <Stack screenOptions={{ headerShown: false }} />
+          </DynamicNavigation>
+        </BottomSheetModalProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 ```
 
----
-
-## 7. Using WapScreen in a Screen
-
-```tsx
-// app/index.tsx
-import WapScreen from "@/components/WapScreen";
-
-export default function HomeScreen() {
-  return <WapScreen path="/" />;
-}
-
-// With custom header/footer:
-export default function AboutScreen() {
-  return <WapScreen path="/about" renderHeader={() => <MyCustomHeader />} />;
-}
-```
+(For social login/push, wrap in `WappaAuthProvider` and register the FCM token — see the `wappa-auth` / `wappa-notifications` skills.)
 
 ---
 
-## 8. Key Mobile Rules
+## 7. Key Mobile Rules
 
-| Rule                                               | Reason                                             |
-| -------------------------------------------------- | -------------------------------------------------- |
-| Always `safeText(value)` for string props          | WAP render may pass ref objects instead of strings |
-| Always `getCDNImage(src)` for image sources        | Prepends CDN base URL                              |
-| Never import `WapScreen` in `components/index.tsx` | Causes circular dependency                         |
-| Use `isMobile: true` in `pageService.get()`        | Fetches mobile-optimized page layout               |
-| `iframe` renders null on mobile                    | Not supported in React Native                      |
-| Always wrap content in `ThemeProvider`             | Applies wappa theme to gluestack config            |
+| Rule | Reason |
+| ---- | ------ |
+| Depend on `@appaflytech/wappa-mobile-ui` — don't reimplement the engine | It owns the registry, render, handler compilation, navigation, overlays |
+| Call `setWappaStore(useAppStore)` once at load | Handlers read/write app state via `store` and `wapNavigate` |
+| Populate `useWappaConfig` from `EXPO_PUBLIC_*` before fetching | `service`, `cdn`, `key`, `env` all come from it |
+| `configService.get(ctx, { language })` — object, not a string | Passing a bare string is the classic bug |
+| `pageService.get(ctx, { path, isMobile: true })` | Fetches the mobile-tailored layout |
+| Default language is `"en-us"` (not `"en"`) | Matches `buildPath` + the backend |
+| Extend the registry via `registerComponents({...})` | Never edit the shared package; `components/custom` is wappa-mcp-generated |
+| Web-only components (`iframe`, `article`, `h1`–`h6`, …) alias to Box or render null | RN has no DOM |

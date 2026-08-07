@@ -1,9 +1,10 @@
 # Wappa Component Schema Contracts
 
 > **Load this file when implementing any component.**
-> Props contracts are derived from the Wappa admin schema (`elements.ts` + `constants.ts`).
-> The contract defines what props the admin can configure. Your implementation must accept all of them.
-> Framework is your choice — examples use gluestack-ui v4 (default).
+> Props contracts are derived from the Wappa admin page-builder schema (`page-builder/definitions/elements.ts` + `constants.ts`).
+> The contract defines what props the admin can configure. Your implementation must accept all of them and ignore unknown props gracefully.
+> **Framework is your choice.** Reference stacks: **wappa-web = plain Tailwind CSS** (real DOM), **wappa-mobile = gluestack-ui v3 primitives + NativeWind v4**. Some snippets show gluestack — that's the mobile reference, not a requirement.
+> **Scope:** the schema defines **130 element entries → 127 unique component `name`s** across **10 groups** (`layout`, `typography`, `media`, `interactive`, `display`, `feedback`, `disclosure`, `overlay`, `form`, `logic`). Every element also appends the global props `componentId` / `className` / `style` (a few invisible/native ones omit some).
 
 ---
 
@@ -68,7 +69,7 @@ interface ContainerProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 export default function Container({
@@ -114,7 +115,7 @@ interface BoxProps {
 }
 ```
 
-gluestack-ui v4: `import { Box } from "@/components/ui/box"`
+gluestack-ui v3: `import { Box } from "@/components/ui/box"`
 
 ---
 
@@ -127,7 +128,7 @@ interface CenterProps {
 }
 ```
 
-gluestack-ui v4: `import { Center } from "@/components/ui/center"`
+gluestack-ui v3: `import { Center } from "@/components/ui/center"`
 
 ---
 
@@ -142,7 +143,7 @@ interface HStackProps {
 }
 ```
 
-gluestack-ui v4: `import { HStack } from "@/components/ui/hstack"` — pass `space`, `reversed` directly.
+gluestack-ui v3: `import { HStack } from "@/components/ui/hstack"` — pass `space`, `reversed` directly.
 
 ---
 
@@ -157,7 +158,7 @@ interface VStackProps {
 }
 ```
 
-gluestack-ui v4: `import { VStack } from "@/components/ui/vstack"` — pass `space`, `reversed` directly.
+gluestack-ui v3: `import { VStack } from "@/components/ui/vstack"` — pass `space`, `reversed` directly.
 
 ---
 
@@ -172,7 +173,7 @@ interface GridProps {
 }
 ```
 
-gluestack-ui v4: `import { Grid } from "@/components/ui/grid"` — pass `numColumns`, `gap` directly.
+gluestack-ui v3: `import { Grid } from "@/components/ui/grid"` — pass `numColumns`, `gap` directly.
 
 ---
 
@@ -186,7 +187,7 @@ interface PressableProps {
 }
 ```
 
-gluestack-ui v4: `import { Pressable } from "@/components/ui/pressable"` — pass `onPress` directly.
+gluestack-ui v3: `import { Pressable } from "@/components/ui/pressable"` — pass `onPress` directly.
 
 ---
 
@@ -266,7 +267,7 @@ interface HeadingProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import { Heading } from "@/components/ui/heading";
@@ -319,7 +320,7 @@ interface ParagraphProps {
 }
 ```
 
-**gluestack-ui v4 default:** Use `Text` component — `import { Text } from "@/components/ui/text"`
+**gluestack-ui v3 default:** Use `Text` component — `import { Text } from "@/components/ui/text"`
 
 ---
 
@@ -355,7 +356,7 @@ interface WapIconProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import { Icon } from "@/components/ui/icon";
@@ -391,7 +392,7 @@ interface WapImageProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import { Image } from "@/components/ui/image";
@@ -483,7 +484,7 @@ interface WapButtonProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import { Button, ButtonText } from "@/components/ui/button";
@@ -531,7 +532,7 @@ interface WapLinkProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import { Link, LinkText } from "@/components/ui/link";
@@ -568,7 +569,7 @@ interface FabProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import { Fab, FabLabel, FabIcon } from "@/components/ui/fab";
@@ -619,7 +620,7 @@ interface CardProps {
 }
 ```
 
-**Note:** gluestack-ui v4 does not have a first-class `Card` component. Build using `Box`, `VStack`, `Heading`, `Text`, `Image` from gluestack-ui v4.
+**Note:** gluestack-ui v3 does not have a first-class `Card` component. Build using `Box`, `VStack`, `Heading`, `Text`, `Image` from gluestack-ui v3.
 
 ---
 
@@ -653,7 +654,7 @@ interface AvatarProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import {
@@ -694,7 +695,7 @@ interface WapBadgeProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import { Badge, BadgeText } from "@/components/ui/badge";
@@ -724,7 +725,7 @@ interface WapDividerProps {
 }
 ```
 
-gluestack-ui v4: `import { Divider } from "@/components/ui/divider"` — pass `orientation` directly.
+gluestack-ui v3: `import { Divider } from "@/components/ui/divider"` — pass `orientation` directly.
 
 ---
 
@@ -762,7 +763,7 @@ interface SkeletonProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import { Skeleton, SkeletonText } from "@/components/ui/skeleton";
@@ -793,7 +794,7 @@ interface SpinnerProps {
 }
 ```
 
-gluestack-ui v4: `import { Spinner } from "@/components/ui/spinner"` — pass all props directly.
+gluestack-ui v3: `import { Spinner } from "@/components/ui/spinner"` — pass all props directly.
 
 ---
 
@@ -810,7 +811,7 @@ interface WapAlertProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import { Alert, AlertText, AlertIcon } from "@/components/ui/alert";
@@ -848,7 +849,7 @@ interface ProgressProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import { Progress, ProgressFilledTrack } from "@/components/ui/progress";
@@ -892,7 +893,7 @@ interface WapToastProps {
 }
 ```
 
-**Implementation note:** Toast is triggered programmatically. Use `useToast()` hook from gluestack-ui v4. In the page builder, render a preview toast or a trigger button.
+**Implementation note:** Toast is triggered programmatically. Use `useToast()` hook from gluestack-ui v3. In the page builder, render a preview toast or a trigger button.
 
 ---
 
@@ -917,7 +918,7 @@ interface AccordionProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import {
@@ -976,7 +977,7 @@ interface TabsProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import {
@@ -1131,7 +1132,7 @@ interface TooltipProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import { Tooltip, TooltipContent, TooltipText } from "@/components/ui/tooltip";
@@ -1174,7 +1175,7 @@ interface FormControlProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import {
@@ -1248,7 +1249,7 @@ interface InputProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import {
@@ -1331,7 +1332,7 @@ interface SelectProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import {
@@ -1384,7 +1385,7 @@ interface SwitchProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import { Switch } from "@/components/ui/switch";
@@ -1425,7 +1426,7 @@ interface CheckboxProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import {
@@ -1476,7 +1477,7 @@ interface RadioProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import {
@@ -1529,7 +1530,7 @@ interface TextareaProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
@@ -1566,7 +1567,7 @@ interface SliderProps {
 }
 ```
 
-**gluestack-ui v4 default:**
+**gluestack-ui v3 default:**
 
 ```tsx
 import {
@@ -1874,7 +1875,9 @@ interface WapAccordionItemProps {
 
 ---
 
-## Summary: All 90+ Components
+## Summary: All 127 Components (130 schema entries, 10 groups)
+
+> **Authoritative groups** are the 10 in `elements.ts`: `layout`, `typography`, `media`, `interactive`, `display`, `feedback`, `disclosure`, `overlay`, `form`, `logic`. The `group` column in the table below sometimes shows a finer UI sub-category (e.g. `native`, `scroll`, `chart`, `map`, `camera`, `navigation`, `utility`) — those all roll up to one of the 10 real groups (e.g. `scroll`/`native` → `layout`, `chart` → `display`, `map`/`camera` → `media`, `navigation` → `disclosure`, `utility` → `feedback`). For the canonical group of any component, use the group table in `SKILL.md`. `column` is 1 name with 4 default-size variants (12/6/4/3).
 
 | name                           | group       | isMobile | notes                                            |
 | ------------------------------ | ----------- | -------- | ------------------------------------------------ |
@@ -1968,6 +1971,37 @@ interface WapAccordionItemProps {
 | line-chart                     | chart       | true     | WapLineChart (mobile only)                       |
 | pie-chart                      | chart       | true     | WapPieChart (mobile only)                        |
 | camera / barcode-scanner       | camera      | true     | WapCamera (mobile only)                          |
-| error-boundary                 | utility     | true     | WapErrorBoundary                                 |
-| image-cropper                  | utility     | true     | WapImageCropper (mobile only)                    |
-| context-menu                   | utility     | true     | WapContextMenu (mobile only)                     |
+| error-boundary                 | feedback    | true     | WapErrorBoundary                                 |
+| image-cropper                  | media       | true     | WapImageCropper (mobile only)                    |
+| context-menu                   | overlay     | true     | WapContextMenu (mobile only)                     |
+| welcome-onboarding             | feedback    | true     | first-run tour (slides, showOnce, storageKey)    |
+| audio                          | media       | true     | audio player (src, componentId, onEnd)           |
+| swipeable                      | layout      | true     | swipe-actions row (mobile)                       |
+| draggable-list                 | layout      | true     | drag-reorder list (mobile)                       |
+| touchable-link                 | interactive | true     | touchable that navigates (href)                  |
+| calendar                       | form        | false    | calendar (web only)                              |
+| date-time-picker               | form        | false    | date/time/datetime (web only)                    |
+| input-accessory-view           | form        | true     | InputAccessoryView                               |
+| multi-select                   | form        | true     | multi-select (options-editor, formBus)           |
+| segmented-control              | form        | true     | segmented control (formBus)                      |
+
+### Typography / layout — web-only names (isMobile: false)
+
+| name                                              | group      | notes                                  |
+| ------------------------------------------------- | ---------- | -------------------------------------- |
+| h1, h2, h3, h4, h5, h6                            | typography | heading shortcuts (→ Headings on web)  |
+| span, strong, em, blockquote, pre, code, time     | typography | inline / semantic text elements        |
+| article, main, nav, aside, header, footer         | layout     | semantic HTML5 wrappers                |
+| ul, ol, li                                        | layout     | list wrappers                          |
+
+### `logic` group — invisible logic/data components (Mantık)
+
+These render nothing; they drive the dataBus/formBus and side effects. They omit most global props.
+
+| name         | notes                                                                                            |
+| ------------ | ------------------------------------------------------------------------------------------------ |
+| script       | Lifecycle handlers: `onMount`, `onUnmount`, `onInterval` + `intervalMs`, `onEffect`, `deps` (comma-separated dataBus IDs). |
+| data-fetch   | `url` (url-or-curl), `method`, `resultPath`, `key`/`loadingKey`/`errorKey` (dataBus outputs), `deps`, `pollInterval`, `headers`/`body` (JSON), `disabled`. |
+| websocket    | `url`, `componentId` (dataBus key), `reconnect`/`reconnectDelay`/`enabled`, `onMessage`/`onConnect`/`onDisconnect`. |
+| notification | `componentId` (dataBus key), `onReceive`, `onTap`.                                                |
+| deep-link    | `componentId` (dataBus key), `handleInitial`, `onLink`.                                           |
